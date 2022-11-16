@@ -1,9 +1,11 @@
-# Use cases
+# Thiapathioly ES Fantasy League (TEFL)
 
-## TTFL score history for a player
+## Use case
+
+### TTFL score history for a player
 - <-- player name
 - -- get player id
-- -- gamelog page (https://www.espn.com/nba/player/gamelog/_/id/4065648/jayson-tatum)
+- -- gamelog page (example: https://www.espn.com/nba/player/gamelog/_/id/4065648/jayson-tatum)
 - -- for each game, calculate TTFL score
 - --> a list of games played and corresponding score: for each game:
     - date
@@ -13,12 +15,12 @@
     - minutes played
     - (+ bonus, malus?)
 
-## Top TTFL averages
+### Top TTFL averages
 - for each player, calculate TTFL average
 - sort and display as a list, for each element:
     - player name
     - player TTFL average
 
-## Availability of a player
+### Availability of a player
 
-## Injury report of a team
+### Injury report of a team
