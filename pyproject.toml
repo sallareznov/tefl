@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "tefl"
+version = "0.1.0"
+description = ""
+authors = ["thiapathioly"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+nba-api = "^1.1.13"
+toolz = "^0.12.0"
+Flask = "^2.2.2"
+beautifulsoup4 = "^4.11.1"
+pymonet = "^0.12.0"
+bottle = "^0.12.23"
+pyfunctional = "^1.4.3"
+aiohttp = "^3.8.3"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+ignore_missing_imports = true
+
+[tool.mypy]
+no_implicit_optional=true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "transformers",
+    "datasets",
+]
+ignore_missing_imports = true
