@@ -4,12 +4,12 @@
 - <-- player name
 - -- get player id
 - -- gamelog page (https://www.espn.com/nba/player/gamelog/_/id/4065648/jayson-tatum)
-- -- for each game, calculate tefl score
+- -- for each game, calculate TTFL score
 - --> a list of games played and corresponding score: for each game:
     - date
     - home/away
     - opponent
-    - tefl score
+    - TTFL score
     - minutes played
     - (+ bonus, malus?)
 
@@ -17,7 +17,7 @@
 - for each player, calculate TTFL average
 - sort and display as a list, for each element:
     - player name
-    - player tefl average
+    - player TTFL average
 
 ## Availability of a player
 
