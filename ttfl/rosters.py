@@ -7,9 +7,9 @@ import aiohttp
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
-from tefl import espn_urls
-from tefl.player import Player
-from tefl.teams import Team
+from ttfl import espn_urls
+from ttfl.player import Player
+from ttfl.teams import Team
 
 
 async def roster(team: Team, session: ClientSession) -> list[Player]:

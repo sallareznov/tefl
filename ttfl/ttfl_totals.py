@@ -6,7 +6,7 @@ from numpy import mean
 from toolz import pipe
 
 
-def tefl_total(log: dict[int, int]) -> int:
+def ttfl_total(log: dict[int, int]) -> int:
     points = log[24]
     rebounds = log[18]
     assists = log[19]
@@ -40,17 +40,17 @@ def get_player_gamelog(player_id: int) -> dict[any]:
     return game_log_json["resultSets"][0]["rowSet"]
 
 
-def get_tefl_totals(all_stats: dict[any]) -> list[int]:
-    return list(map(tefl_total, all_stats))
+def get_ttfl_totals(all_stats: dict[any]) -> list[int]:
+    return list(map(ttfl_total, all_stats))
 
 
-def tefl_average(tefl_totals: list[int]) -> float:
-    return round(mean(tefl_totals).item(), 1)
+def ttfl_average(ttfl_totals: list[int]) -> float:
+    return round(mean(ttfl_totals).item(), 1)
 
 
-def tefl_totals_for_player(name: str) -> list[int]:
-    return pipe(name, get_player_id, get_player_gamelog, get_tefl_totals)
+def ttfl_totals_for_player(name: str) -> list[int]:
+    return pipe(name, get_player_id, get_player_gamelog, get_ttfl_totals)
 
 
-def tefl_average_for_player(name: str) -> float:
-    return pipe(name, get_player_id, get_player_gamelog, get_tefl_totals, tefl_average)
+def ttfl_average_for_player(name: str) -> float:
+    return pipe(name, get_player_id, get_player_gamelog, get_ttfl_totals, ttfl_average)

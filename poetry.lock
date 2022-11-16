@@ -67,14 +67,6 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
-name = "bottle"
-version = "0.12.23"
-description = "Fast and simple WSGI-framework for small web-applications."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "certifi"
 version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -328,7 +320,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "e7f24b45f3a951bf293eb845e3aa3a94b79db6e7ecd03da40a4769c9ef76905f"
+content-hash = "e804a544b4596fe63ea08bf859a0ada9e59d2371e0777d08fb2d75391ebcff29"
 
 [metadata.files]
 aiohttp = []
@@ -339,7 +331,6 @@ async-timeout = [
 ]
 attrs = []
 beautifulsoup4 = []
-bottle = []
 certifi = []
 charset-normalizer = []
 click = []

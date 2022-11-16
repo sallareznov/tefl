@@ -1,4 +1,4 @@
-from tefl.teams import Team
+from ttfl.teams import Team
 
 all_teams_injuries: str = f"https://www.espn.com/nba/injuries"
 scoreboard: str = f"https://www.espn.com/nba/scoreboard"

@@ -4,8 +4,6 @@ from bs4.element import ResultSet, Tag
 from pymonet.monad_try import Try
 from requests import Response
 
-from tefl.teams import teams_dict
-
 
 def injuries(team_name: str):
     response: Response = requests.get(f"https://www.espn.com/nba/team/injuries/_/name/{team_name}")
