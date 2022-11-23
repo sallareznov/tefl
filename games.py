@@ -1,5 +1,5 @@
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from statistics import mean
 
@@ -61,24 +61,24 @@ class Gamelog:
         self.entries = entries
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]
-        self.ttfl_average = round(mean(ttfl_scores), 1)
+        self.ttfl_average = 0 if not ttfl_scores else round(mean(ttfl_scores), 1)
 
 
 def gamelog(player: Player) -> Gamelog:
     response = requests.get(basketball_reference_urls.player_gamelog_url(player.profile_uri))
-    soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
-
+    soup = BeautifulSoup(response.text, "html.parser")
     gamelog_entries = [gamelog_entry(log) for log in soup.select("tr[id*='pgl_basic.']")]
 
     return Gamelog(entries=gamelog_entries)
 
 
 def gamelog_entry(log: Tag) -> GamelogEntry:
-    date_str = log.select_one("td[data-stat='date_game']").text
+    date_str = select_cell(log, "date_game")
     date = datetime.strptime(date_str, '%Y-%m-%d')
-    opponent_short_name = log.select_one("td[data-stat='opp_id']").text
+    opponent_short_name = select_cell(log, "opp_id")
     opponent = next(team for team in list(Team) if team.value[2] == opponent_short_name)
-    location = GameLocation.AWAY if log.select_one("td[data-stat='game_location']").text == "@" else GameLocation.HOME
+    game_location_text = select_cell(log, "game_location")
+    location = GameLocation.AWAY if game_location_text == "@" else GameLocation.HOME
     real_stats = game_real_stats(log)
     ttfl_stats = game_ttfl_stats(real_stats)
 
@@ -93,18 +93,18 @@ def gamelog_entry(log: Tag) -> GamelogEntry:
 
 def game_real_stats(log: Tag) -> GameRealStats:
     return GameRealStats(
-        points=select_metric(log, "pts"),
-        rebounds=select_metric(log, "trb"),
-        assists=select_metric(log, "ast"),
-        steals=select_metric(log, "stl"),
-        blocks=select_metric(log, "blk"),
-        field_goals_made=select_metric(log, "fg"),
-        field_goals_attempted=select_metric(log, "fga"),
-        three_pointers_made=select_metric(log, "fg3"),
-        three_pointers_attempted=select_metric(log, "fg3a"),
-        free_throws_made=select_metric(log, "ft"),
-        free_throws_attempted=select_metric(log, "fta"),
-        turnovers=select_metric(log, "tov")
+        points=int(select_cell(log, "pts")),
+        rebounds=int(select_cell(log, "trb")),
+        assists=int(select_cell(log, "ast")),
+        steals=int(select_cell(log, "stl")),
+        blocks=int(select_cell(log, "blk")),
+        field_goals_made=int(select_cell(log, "fg")),
+        field_goals_attempted=int(select_cell(log, "fga")),
+        three_pointers_made=int(select_cell(log, "fg3")),
+        three_pointers_attempted=int(select_cell(log, "fg3a")),
+        free_throws_made=int(select_cell(log, "ft")),
+        free_throws_attempted=int(select_cell(log, "fta")),
+        turnovers=int(select_cell(log, "tov"))
     )
 
 
@@ -119,5 +119,5 @@ def game_ttfl_stats(real_stats: GameRealStats) -> GameTTFLStats:
     return GameTTFLStats(bonus=bonus, malus=malus)
 
 
-def select_metric(log: Tag, data_stat: str) -> int:
-    return int(log.select_one(f"td[data-stat='{data_stat}']").text)
+def select_cell(log: Tag, data_stat: str) -> str:
+    return log.select_one(f"td[data-stat='{data_stat}']").text
