@@ -28,15 +28,13 @@ def single_player_gamelog(player: Player):
             h("tr")(
                 h("th")("Date"),
                 h("th")("Adversaire"),
-                h("th")("Bonus TTFL"),
-                h("th")("Malus TTFL"),
-                h("th")("Score TTFL")
+                h("th")("Lieu"),
+                h("th")("Score TTFL"),
             ),
             (h("tr")(
-                h("td")(result.date),
-                h("td")(result.opponent),
-                h("td")(result.ttfl_stats.bonus),
-                h("td")(result.ttfl_stats.malus),
+                h("td")(result.date.strftime("%d-%m-%Y")),
+                h("td")(result.opponent.value[1]),
+                h("td")(result.location.value),
                 h("td")(result.ttfl_stats.score)
             ) for result in gamelog.entries)
         )

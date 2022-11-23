@@ -21,7 +21,7 @@ async def all_players_from_teams(teams: list[Team]):
 
 
 async def roster(team: Team, session: ClientSession) -> list[Player]:
-    r = await session.request('GET', url=basketball_reference_urls.team_url(team.value[1]))
+    r = await session.request('GET', url=basketball_reference_urls.team_url(team.value[2]))
     text: str = await r.text()
     soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
 

@@ -1,4 +1,6 @@
+from datetime import datetime
 from dataclasses import dataclass
+from enum import Enum
 from statistics import mean
 
 import requests
@@ -6,6 +8,7 @@ from bs4 import Tag, BeautifulSoup
 
 import basketball_reference_urls
 from players import Player
+from teams import Team
 
 
 @dataclass
@@ -35,10 +38,16 @@ class GameTTFLStats:
         self.score = bonus - malus
 
 
+class GameLocation(Enum):
+    HOME = "Dom."
+    AWAY = "Ext."
+
+
 @dataclass
 class GamelogEntry:
-    date: str
-    opponent: str
+    date: datetime
+    opponent: Team
+    location: GameLocation
     real_stats: GameRealStats
     ttfl_stats: GameTTFLStats
 
@@ -65,12 +74,21 @@ def gamelog(player: Player) -> Gamelog:
 
 
 def gamelog_entry(log: Tag) -> GamelogEntry:
-    date = log.select_one("td[data-stat='date_game']").text
-    opponent = log.select_one("td[data-stat='opp_id']").text
+    date_str = log.select_one("td[data-stat='date_game']").text
+    date = datetime.strptime(date_str, '%Y-%m-%d')
+    opponent_short_name = log.select_one("td[data-stat='opp_id']").text
+    opponent = next(team for team in list(Team) if team.value[2] == opponent_short_name)
+    location = GameLocation.AWAY if log.select_one("td[data-stat='game_location']").text == "@" else GameLocation.HOME
     real_stats = game_real_stats(log)
     ttfl_stats = game_ttfl_stats(real_stats)
 
-    return GamelogEntry(date=date, opponent=opponent, real_stats=real_stats, ttfl_stats=ttfl_stats)
+    return GamelogEntry(
+        date=date,
+        opponent=opponent,
+        location=location,
+        real_stats=real_stats,
+        ttfl_stats=ttfl_stats
+    )
 
 
 def game_real_stats(log: Tag) -> GameRealStats:

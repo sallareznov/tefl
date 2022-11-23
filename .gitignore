@@ -278,3 +278,5 @@ cython_debug/
 
 # Based on https://stackoverflow.com/a/61076546
 poetry.lock
+
+.DS_Store
