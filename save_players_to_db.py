@@ -6,10 +6,10 @@ from typing import Coroutine, Any
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
-from ttfl.players import Player
-from ttfl.teams import Team
+from players import Player
+from teams import Team
 
-connection = sqlite3.connect("ttfl/players.db")
+connection = sqlite3.connect("players.db")
 
 
 async def all_players_from_teams(teams: list[Team]):

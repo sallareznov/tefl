@@ -2,8 +2,8 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from unidecode import unidecode
 
-from ttfl.players import Player, GameResult
-from ttfl.players_db import get_players_from_db
+from players import Player, GameResult
+from players_db import get_players_from_db
 
 
 def matching_players(players: list[Player], name: str) -> list[Player]:

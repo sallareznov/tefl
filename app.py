@@ -1,11 +1,11 @@
 from tinyhtml import _h, html, h
 
-from ttfl.player_gamelog import matching_players, gamelog
-from ttfl.players import Player
+from player_gamelog import matching_players, gamelog
+from players import Player
 
 from flask import Flask
 
-from ttfl.players_db import get_players_from_db
+from players_db import get_players_from_db
 
 app = Flask(__name__)
 
