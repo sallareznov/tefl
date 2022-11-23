@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from unidecode import unidecode
+
 
 @dataclass
 class Player:
@@ -7,16 +9,5 @@ class Player:
     profile_uri: str
 
 
-class GameResult:
-    date: str
-    opponent: str
-    ttfl_bonus: int
-    ttfl_malus: int
-    ttfl_score: int
-
-    def __init__(self, date, opponent, bonus, malus):
-        self.date = date
-        self.opponent = opponent
-        self.ttfl_bonus = bonus
-        self.ttfl_malus = malus
-        self.ttfl_score = bonus - malus
+def matching_players(players: list[Player], search: str) -> list[Player]:
+    return [player for player in players if unidecode(search).lower() in unidecode(player.name).lower()]

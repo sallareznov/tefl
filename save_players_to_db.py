@@ -6,6 +6,7 @@ from typing import Coroutine, Any
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
+import basketball_reference_urls
 from players import Player
 from teams import Team
 
@@ -20,7 +21,7 @@ async def all_players_from_teams(teams: list[Team]):
 
 
 async def roster(team: Team, session: ClientSession) -> list[Player]:
-    r = await session.request('GET', url=f"https://www.basketball-reference.com/teams/{team.value[1]}/2023.html")
+    r = await session.request('GET', url=basketball_reference_urls.team_url(team.value[1]))
     text: str = await r.text()
     soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
 
