@@ -4,8 +4,7 @@
 
 ### TTFL score history for a player
 TODO
-- add logos for teams
-- emojis
+- team logo for player
 
 ### Top TTFL averages
 - for each player, calculate TTFL average

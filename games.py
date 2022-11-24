@@ -4,6 +4,7 @@ from enum import Enum
 from statistics import mean
 
 import pandas
+from tinyhtml import raw, frag
 
 from teams import Team
 
@@ -38,6 +39,13 @@ class GameTTFLStats:
 class GameLocation(Enum):
     HOME = "Dom."
     AWAY = "Ext."
+
+    def html_repr(self):
+        emoji_code = "127968" if self == GameLocation.HOME else "9992"
+        return frag(
+            self.value,
+            raw(f" &#{emoji_code}")
+        )
 
 
 @dataclass

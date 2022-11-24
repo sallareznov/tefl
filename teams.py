@@ -20,7 +20,7 @@ class Team(Enum):
     NUGGETS = "Denver", "Nuggets", "DEN", "den.png"
     WOLVES = "Minnesota", "Timberwolves", "MIN", "min.png"
     THUNDER = "Oklahoma City", "Thunder", "OKC", "okc.png"
-    BLAZERS = "Portland", "Trailblazers", "POR", "chi.png"
+    BLAZERS = "Portland", "Trailblazers", "POR", "por.png"
     JAZZ = "Utah", "Jazz", "UTA", "utah.png"
     WARRIORS = "Golden State", "Warriors", "GSW", "gs.png"
     CLIPPERS = "Los Angeles", "Clippers", "LAC", "lac.png"

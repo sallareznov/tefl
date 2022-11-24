@@ -3,7 +3,7 @@ from itertools import chain
 import pandas
 from flask import Flask
 from lxml.html.builder import HTML
-from tinyhtml import _h, html, h
+from tinyhtml import _h, html, h, raw
 
 import gamelog
 import scoreboard
@@ -87,7 +87,7 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
 
     return h("div")(
         h("h2")(f"{p.name} [moyenne TTFL: {g.ttfl_average}] [{g.games_played} matchs joués]"),
-        h("table", klass="table table-sm table-responsive")(
+        h("table", klass="table table-sm table-responsive table-bordered")(
             h("thead")(
                 h("tr")(
                     h("th")("Date"),
@@ -100,14 +100,16 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
             h("tbody", klass="table-group-divider")(
                 (h("tr")(
                     h("td")(result.date.strftime("%d-%m-%Y")),
-                    # f'{result.opponent.value[1]}
                     h("td")(
                         h("img", src=result.opponent.logo()),
                         f" {result.opponent.value[1]}"
                     ),
-                    h("td")(result.location.value),
-                    h("td")(f"{result.minutes_played}"),
-                    h("td")(result.ttfl_stats.score)
+                    h("td")(result.location.html_repr()),
+                    h("td", klass="text-center")(
+                        f"{result.minutes_played}",
+                        h("span")(raw(" &#9201;"))
+                    ),
+                    h("td", klass="text-center")(result.ttfl_stats.score)
                 ) for result in g.entries)
             )
         )
