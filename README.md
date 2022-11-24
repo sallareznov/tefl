@@ -3,17 +3,9 @@
 ## Use case
 
 ### TTFL score history for a player
-- <-- player name
-- -- get player id
-- -- gamelog page (example: https://www.espn.com/nba/player/gamelog/_/id/4065648/jayson-tatum)
-- -- for each game, calculate TTFL score
-- --> a list of games played and corresponding score: for each game:
-    - date
-    - home/away
-    - opponent
-    - TTFL score
-    - minutes played
-    - (+ bonus, malus?)
+TODO
+- add logos for teams
+- emojis
 
 ### Top TTFL averages
 - for each player, calculate TTFL average

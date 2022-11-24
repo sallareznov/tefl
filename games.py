@@ -48,6 +48,7 @@ class GamelogEntry:
     date: datetime
     opponent: Team
     location: GameLocation
+    minutes_played: int
     real_stats: GameRealStats
     ttfl_stats: GameTTFLStats
 
@@ -75,10 +76,17 @@ def gamelog(player: Player) -> Gamelog:
 def gamelog_entry(log: Tag) -> GamelogEntry:
     date_str = select_cell(log, "date_game")
     date = datetime.strptime(date_str, '%Y-%m-%d')
+
     opponent_short_name = select_cell(log, "opp_id")
     opponent = next(team for team in list(Team) if team.value[2] == opponent_short_name)
+
     game_location_text = select_cell(log, "game_location")
     location = GameLocation.AWAY if game_location_text == "@" else GameLocation.HOME
+
+    time_played = select_cell(log, "mp")
+    (minutes, seconds) = [int(x) for x in time_played.split(":")]
+    minutes_played = minutes if seconds <= 30 else minutes + 1
+
     real_stats = game_real_stats(log)
     ttfl_stats = game_ttfl_stats(real_stats)
 
@@ -86,6 +94,7 @@ def gamelog_entry(log: Tag) -> GamelogEntry:
         date=date,
         opponent=opponent,
         location=location,
+        minutes_played=minutes_played,
         real_stats=real_stats,
         ttfl_stats=ttfl_stats
     )
