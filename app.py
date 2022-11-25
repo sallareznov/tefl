@@ -1,13 +1,10 @@
 from itertools import chain
 
-import pandas
 from flask import Flask
-from lxml.html.builder import HTML
 from tinyhtml import _h, html, h, raw
 
 import gamelog
 import scoreboard
-import teams
 from games import Gamelog
 from players import Player
 from players_db import get_players_from_db
@@ -109,8 +106,34 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
                         f"{result.minutes_played}",
                         h("span")(raw(" &#9201;"))
                     ),
-                    h("td", klass="text-center")(result.ttfl_stats.score)
+                    h("td", klass="text-center")(
+                        result.ttfl_stats.score,
+                        raw(f" &#{reaction(result.ttfl_stats.score)};")
+                    )
                 ) for result in g.entries)
             )
         )
     )
+
+
+# https://www.w3schools.com/charsets/ref_emoji.asp
+def reaction(ttfl_score: int) -> str:
+    match ttfl_score:
+        case _ if ttfl_score < 10:
+            return "129326"
+        case _ if ttfl_score < 30:
+            return "128529"
+        case _ if ttfl_score < 35:
+            return "128530"
+        case _ if ttfl_score < 40:
+            return "128517"
+        case _ if ttfl_score < 45:
+            return "128522"
+        case _ if ttfl_score < 50:
+            return "128516"
+        case _ if ttfl_score < 60:
+            return "128526"
+        case _ if ttfl_score < 80:
+            return "128525"
+        case _:
+            return "129327"
