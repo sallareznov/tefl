@@ -121,8 +121,10 @@ def reaction(ttfl_score: int) -> str:
     match ttfl_score:
         case _ if ttfl_score < 10:
             return "129326"
-        case _ if ttfl_score < 30:
+        case _ if ttfl_score < 20:
             return "128529"
+        case _ if ttfl_score < 30:
+            return "128580"
         case _ if ttfl_score < 35:
             return "128530"
         case _ if ttfl_score < 40:
