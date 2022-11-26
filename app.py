@@ -1,10 +1,13 @@
+from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
 
 from flask import Flask
-from tinyhtml import _h, html, h, raw
+from tinyhtml import _h, html, h
 
+import emojis
 import gamelog
 import scoreboard
+from emojis import Emoji
 from games import Gamelog
 from players import Player
 from players_db import get_players_from_db
@@ -25,30 +28,48 @@ def player_ttfl_gamelog(search: str):
 @app.route("/live")
 def live_ttfl_scores():
     scoreboards = scoreboard.scoreboard_links()
-    ps = list(chain(*[scoreboard.players_ttfl_scores(s) for s in scoreboards]))
-    ps_sorted = sorted(ps, key=lambda x: x[1], reverse=True)
+    performances = []
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        for result in executor.map(scoreboard.ttfl_scores_for_game, [s for s in scoreboards]):
+            performances.append(result)
+
+    performances_sorted_by_ttfl_score = sorted(list(chain(*performances)), key=lambda perf: perf[1], reverse=True)
 
     return html()(
-        h("style")("table, th, td { border: 1px solid black; }"),
         h("head")(
             h("meta", charset="utf-8"),
-            h("link", rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
-              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
-              crossorigin="anonymous")
+            h(
+                "link",
+                rel="stylesheet",
+                href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
+                integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
+                crossorigin="anonymous"
+            )
         ),
         h("body")(
             h("div")(
-                h("table")(
-                    h("tr")(
-                        h("th")("Joueur"),
-                        h("th")("Score TTFL"),
-                        h("th")("Temps")
+                h("h2")("Meilleurs scores TTFL de la nuit"),
+                h("table", klass="table table-sm table-responsive table-bordered")(
+                    h("thead", klass="table-light")(
+                        h("tr")(
+                            h("th", scope="col")("#"),
+                            h("th", scope="col")("Joueur"),
+                            h("th", scope="col")("Score TTFL"),
+                            h("th", scope="col")("Minutes jouées"),
+                            h("th", scope="col")("Adversaire")
+                        )
                     ),
-                    (h("tr")(
-                        h("td")(pss[0]),
-                        h("td")(pss[1]),
-                        h("td")(pss[2]),
-                    ) for pss in ps_sorted)
+                    h("tbody", klass="table-group-divider")(
+                        h("tr")(
+                            h("th", scope="row")(index + 1),
+                            h("td")(h("img", src=team.logo()), f" {player}"),
+                            h("td", klass="text-center")(h("span", style="font-weight:bold;")(score)),
+                            h("td", klass="text-center")(f" {minutes}", Emoji.stopwatch.html()),
+                            h("td", klass="text-center")(location.value[1].html(), f" {opponent.value[1]}")
+                        ) for index, (player, score, minutes, team, location, opponent) in
+                        enumerate(performances_sorted_by_ttfl_score)
+                    )
                 )
             )
         )
@@ -74,7 +95,7 @@ def html_gamelog(gamelog_for_player: list[tuple[Player, Gamelog]]) -> _h:
             )
         ),
         h("body")(
-            (h("div")(single_player_gamelog(player)) for player in sorted_by_ttfl_average)
+            (single_player_gamelog(player) for player in sorted_by_ttfl_average)
         )
     )
 
@@ -83,59 +104,39 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
     (p, g) = gamelog_for_player
 
     return h("div")(
-        h("h2")(f"{p.name} [moyenne TTFL: {g.ttfl_average}] [{g.games_played} matchs joués]"),
+        h("h2")(f"{p.name} [moyenne TTFL: {g.ttfl_average}]"),
         h("table", klass="table table-sm table-responsive table-bordered")(
-            h("thead")(
+            h("thead", klass="table-light")(
                 h("tr")(
-                    h("th")("Date"),
-                    h("th")("Adversaire"),
-                    h("th")("Lieu"),
-                    h("th")("Minutes jouées"),
-                    h("th")("Score TTFL"),
+                    h("th", scope="col")("#"),
+                    h("th", scope="col")("Date"),
+                    h("th", scope="col")("Adversaire"),
+                    h("th", scope="col")("Lieu"),
+                    h("th", scope="col")("Minutes jouées"),
+                    h("th", scope="col")("Score TTFL")
                 )
             ),
             h("tbody", klass="table-group-divider")(
                 (h("tr")(
+                    h("th", scope="row")(index + 1),
                     h("td")(result.date.strftime("%d-%m-%Y")),
                     h("td")(
                         h("img", src=result.opponent.logo()),
                         f" {result.opponent.value[1]}"
                     ),
-                    h("td")(result.location.html_repr()),
+                    h("td")(result.location.html()),
                     h("td", klass="text-center")(
                         f"{result.minutes_played}",
-                        h("span")(raw(" &#9201;"))
+                        h("span")(Emoji.stopwatch.html())
                     ),
                     h("td", klass="text-center")(
                         result.ttfl_stats.score,
-                        raw(f" &#{reaction(result.ttfl_stats.score)};")
+                        emojis.from_ttfl_score(result.ttfl_stats.score).html()
                     )
-                ) for result in g.entries)
+                ) for (index, result) in enumerate(g.entries))
             )
         )
     )
 
 
-# https://www.w3schools.com/charsets/ref_emoji.asp
-def reaction(ttfl_score: int) -> str:
-    match ttfl_score:
-        case _ if ttfl_score < 10:
-            return "129326"
-        case _ if ttfl_score < 20:
-            return "128529"
-        case _ if ttfl_score < 30:
-            return "128580"
-        case _ if ttfl_score < 35:
-            return "128530"
-        case _ if ttfl_score < 40:
-            return "128517"
-        case _ if ttfl_score < 45:
-            return "128522"
-        case _ if ttfl_score < 50:
-            return "128516"
-        case _ if ttfl_score < 60:
-            return "128526"
-        case _ if ttfl_score < 80:
-            return "128525"
-        case _:
-            return "129327"
+
