@@ -55,9 +55,9 @@ def live_ttfl_scores():
                         h("tr")(
                             h("th", scope="col")("#"),
                             h("th", scope="col")("Joueur"),
-                            h("th", scope="col")("Score TTFL"),
+                            h("th", scope="col", klass="text-center")("Score TTFL"),
                             h("th", scope="col")("Minutes jouées"),
-                            h("th", scope="col")("Adversaire")
+                            h("th", scope="col", klass="text-center")("Adversaire")
                         )
                     ),
                     h("tbody", klass="table-group-divider")(
