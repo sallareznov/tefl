@@ -45,7 +45,8 @@ def live_ttfl_scores():
                 href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
                 integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
                 crossorigin="anonymous"
-            )
+            ),
+            h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")
         ),
         h("body")(
             h("div")(
