@@ -46,18 +46,22 @@ loop for each live or finished game
   ThiapzFL->ESPN: get game boxscore
   deactivate ESPN
   loop for each player involved in the game
-    ThiapzFL->ThiapzFL: extract player stats
-    ThiapzFL->ThiapzFL: calculate TTFFL score
+    ThiapzFL->ThiapzFL: extract player info
+    ThiapzFL->ThiapzFL: calculate TTFL score
   end loop
 end loop
 ThiapzFL->ThiapzFL: sort all players' TTFL scores descending
-ThiapzFL-->User: HTML page with a table containing all players involved in a game, and their TTFL scores 
+ThiapzFL-->User: HTML page with a table containing all players involved in a game, and their TTFL scores
+note right 
+player name
+team
+ttfl score
+minutes played
+game location
+opponent
+end note 
 @enduml
 ```
-
-### TTFL score history for a player
-TODO
-- team logo for player
 
 ### Top TTFL averages
 - for each player, calculate TTFL average
