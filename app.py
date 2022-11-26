@@ -37,17 +37,7 @@ def live_ttfl_scores():
     performances_sorted_by_ttfl_score = sorted(list(chain(*performances)), key=lambda perf: perf[1], reverse=True)
 
     return html()(
-        h("head")(
-            h("meta", charset="utf-8"),
-            h(
-                "link",
-                rel="stylesheet",
-                href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
-                integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
-                crossorigin="anonymous"
-            ),
-            h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")
-        ),
+        h("head")(head),
         h("body")(
             h("div")(
                 h("h2")("Meilleurs scores TTFL de la nuit"),
@@ -85,16 +75,7 @@ def html_gamelog(gamelog_for_player: list[tuple[Player, Gamelog]]) -> _h:
     )
 
     return html()(
-        h("head")(
-            h("meta", charset="utf-8"),
-            h(
-                "link",
-                rel="stylesheet",
-                href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
-                integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
-                crossorigin="anonymous"
-            )
-        ),
+        h("head")(head),
         h("body")(
             (single_player_gamelog(player) for player in sorted_by_ttfl_average)
         )
@@ -140,4 +121,12 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
     )
 
 
-
+head = (
+    h("meta", charset="utf-8"),
+    h("link", rel="stylesheet",
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
+      crossorigin="anonymous"
+      ),
+    h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")
+)
