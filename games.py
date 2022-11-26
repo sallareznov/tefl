@@ -3,7 +3,6 @@ from datetime import datetime
 from enum import Enum
 from statistics import mean
 
-import pandas
 from tinyhtml import frag
 
 from emojis import Emoji
@@ -44,6 +43,7 @@ class GameLocation(Enum):
     def html(self):
         return frag(self.value[0], self.value[1].html())
 
+
 @dataclass
 class GamelogEntry:
     date: datetime
@@ -64,16 +64,3 @@ class Gamelog:
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]
         self.ttfl_average = 0 if not ttfl_scores else round(mean(ttfl_scores), 1)
-
-
-if __name__ == '__main__':
-    table_ESPN = pandas.read_html(
-        "https://www.espn.co.uk/nba/boxscore/_/gameId/401468415"
-    )
-
-    # print(table_MN[0][["PTS", "TRB", "AST", "STL", "BLK", "FG", "FGA", "3P", "3PA", "FT", "FTA", "TOV"]])
-
-    # print(table_ESPN[0][["PTS", "REB", "AST", "STL", "BLK", "FG", "3PT", "FT", "TO"]])
-    # print(table_ESPN[2][[1, 2, 3]])
-    # print(table_ESPN[1])
-    # print([x.columns for x in table_ESPN])
