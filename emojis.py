@@ -3,6 +3,7 @@ from enum import Enum
 from tinyhtml import raw
 
 
+# https://www.w3schools.com/charsets/ref_emoji.asp
 class Emoji(Enum):
     airplane = 9992
     blush = 128522
@@ -22,7 +23,6 @@ class Emoji(Enum):
         return raw(f" &#{self.value};")
 
 
-# https://www.w3schools.com/charsets/ref_emoji.asp
 def from_ttfl_score(ttfl_score: int) -> Emoji:
     match ttfl_score:
         case _ if ttfl_score < 10:

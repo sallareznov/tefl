@@ -60,7 +60,7 @@ class Gamelog:
     ttfl_average: float
 
     def __init__(self, entries: list[GamelogEntry]):
-        self.entries = entries
+        self.entries = sorted(entries, key=lambda entry: entry.date, reverse=True)
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]
         self.ttfl_average = 0 if not ttfl_scores else round(mean(ttfl_scores), 1)
