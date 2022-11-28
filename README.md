@@ -20,7 +20,7 @@ end note
 - get gamelog for player with TTFL scores
 
 ```plantuml
-@startuml
+@startuml 
 User->ThiapzFL: search gamelog for players 
 ThiapzFL->PlayersDatabase: find players which name contains the user input
 loop for each matching player
@@ -69,13 +69,13 @@ end note
     - player name
     - player TTFL average
 
-### Availability of a player
-
 ### Injury report of a team
 
 if __name__ == '__main__':
     today = datetime.now().strftime("%Y%m%d")
     tomorrow = datetime.now().strftime("%Y%m%d")
+
+### TTFL scores of a player against a team for the two-three last years
 
     scoreboard_page = BeautifulSoup(requests.get(f"https://www.espn.com/nba/scoreboard").text, "html.parser")
     games = scoreboard_page.select("div[class~=ScoreboardScoreCell] ul[class~=ScoreboardScoreCell__Competitors]")

@@ -25,7 +25,7 @@ def compute_gamelog(player: Player) -> Gamelog:
     gamelog_entries = [
         gamelog_entry(data_frame, i)
         for i in range(data_frame.index.stop)
-        if not math.isnan(data_frame["G"][i])
+        if data_frame["GS"][i] in ["0", "1"]
     ]
 
     return Gamelog(entries=gamelog_entries)
