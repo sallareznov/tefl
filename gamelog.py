@@ -25,8 +25,10 @@ def compute_gamelog(player: Player) -> Gamelog:
     gamelog_entries = [
         gamelog_entry(data_frame, i)
         for i in range(data_frame.index.stop)
-        if data_frame["GS"][i] in ["0", "1"]
+        if data_frame["GS"][i] in [0, "0", 1, "1"]
     ]
+
+    print(gamelog_entries.__len__())
 
     return Gamelog(entries=gamelog_entries)
 
