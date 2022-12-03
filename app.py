@@ -63,7 +63,7 @@ def live_ttfl_scores():
                             h("td")(h("img", src=team.logo()), f" {player}"),
                             h("td", klass="text-center")(h("span", style="font-weight:bold;")(score)),
                             h("td", klass="text-center")(f" {minutes}", Emoji.stopwatch.html()),
-                            h("td", klass="text-center")(location.value[1].html(), f" {opponent.value[1]}")
+                            h("td", klass="text-center")(location.value[2].html(), f" {opponent.value[1]}")
                         ) for index, (player, score, minutes, team, location, opponent) in
                         enumerate(performances_sorted_by_ttfl_score)
                     )
