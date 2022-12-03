@@ -5,17 +5,16 @@ from itertools import chain
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask
-from html2image import Html2Image
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
 import gamelog
 import injury_reports
-from injury_reports import PlayerInjuryStatus, TeamInjuryReport
 import scoreboard
 import scores
 from emojis import Emoji
 from games import Gamelog
+from injury_reports import PlayerInjuryStatus, TeamInjuryReport
 from players import Player
 from players_db import get_players_from_db
 
@@ -200,6 +199,6 @@ head = (
     h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")
 )
 
-if __name__ == '__main__':
-    hti = Html2Image()
-    hti.screenshot(url='http://127.0.0.1:5000/injuries', save_as='python_org.png')
+#if __name__ == '__main__':
+#    hti = Html2Image()
+#    hti.screenshot(url='http://127.0.0.1:5000/injuries', save_as='python_org.png')

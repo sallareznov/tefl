@@ -75,13 +75,6 @@ def transform_frame(frame: DataFrame) -> DataFrame:
     frame = frame.join(status_column.to_frame(name="Current Status"))
     frame = frame.join(name_column.to_frame(name="Player Name"))
     frame = frame.drop(["Player Name Current Status"], axis=1)
-    print(list(np.where(frame["Game Date"].notnull())))
-    today = datetime.now(timezone("US/Eastern"))
-    today_str = today.strftime("%m/%d/%Y")
-    tomorrow = today + timedelta(days=1)
-    tomorrow_str = tomorrow.strftime("%m/%d/%Y")
-    print(today_str)
-    print(tomorrow_str)
 
     frame = frame[["Game Date", "Game Time", "Matchup", "Team", "Player Name", "Current Status", "Reason"]]
     # frame = frame.loc[str(frame["Current Status"]).isdigit() is True]
@@ -112,7 +105,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
         match team:
             case _ if str(row["Game Date"]) == tomorrow_str:
                 break
-            case _ if team != "nan" and away_team.equals(team) and reason == "NOT YET SUBMITTED":
+            case _ if away_team.equals(team) and reason == "NOT YET SUBMITTED":
                 all_reports.append(current_report)
                 current_report = TeamInjuryReport(
                     team=away_team,
@@ -121,7 +114,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                     state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
                     injured_players=[]
                 )
-            case _ if team != "nan" and home_team.equals(team) and reason == "NOT YET SUBMITTED":
+            case _ if home_team.equals(team) and reason == "NOT YET SUBMITTED":
                 all_reports.append(current_report)
                 current_report = TeamInjuryReport(
                     team=home_team,
@@ -130,7 +123,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                     state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
                     injured_players=[]
                 )
-            case _ if team != "nan" and away_team.equals(team):
+            case _ if away_team.equals(team):
                 all_reports.append(current_report)
                 current_report = TeamInjuryReport(
                     team=away_team,
@@ -140,7 +133,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                     injured_players=[]
                 )
                 current_report.add_player(player_name, status, reason)
-            case _ if team != "nan" and home_team.equals(team):
+            case _ if home_team.equals(team):
                 all_reports.append(current_report)
                 current_report = TeamInjuryReport(
                     team=home_team,

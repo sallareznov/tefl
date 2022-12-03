@@ -24,7 +24,7 @@ class Team(Enum):
     BLAZERS = "Portland", "Trail Blazers", "POR", "POR", "POR"
     JAZZ = "Utah", "Jazz", "UTA", "UTAH", "UTA"
     WARRIORS = "Golden State", "Warriors", "GSW", "GS", "GSW"
-    CLIPPERS = "Los Angeles", "Clippers", "LAC", "LAC", "LAC"
+    CLIPPERS = "LA", "Clippers", "LAC", "LAC", "LAC"
     LAKERS = "Los Angeles", "Lakers", "LAL", "LAL", "LAL"
     SUNS = "Phoenix", "Suns", "PHO", "PHX", "PHX"
     KINGS = "Sacramento", "Kings", "SAC", "SAC", "SAC"
