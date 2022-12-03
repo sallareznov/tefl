@@ -1,12 +1,19 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from itertools import chain
 
+import requests
+from bs4 import BeautifulSoup
 from flask import Flask
-from tinyhtml import _h, html, h
+from html2image import Html2Image
+from pytz import timezone
+from tinyhtml import _h, html, h, raw
 
-import emojis
 import gamelog
+import injury_reports
+from injury_reports import PlayerInjuryStatus, TeamInjuryReport
 import scoreboard
+import scores
 from emojis import Emoji
 from games import Gamelog
 from players import Player
@@ -67,6 +74,68 @@ def live_ttfl_scores():
     ).render()
 
 
+@app.route("/injuries")
+def injury_report():
+    url = latest_injury_report_url()
+    today = datetime.now(timezone("US/Eastern"))
+    reports = injury_reports.get_injury_reports(url, today)
+
+    return html()(
+        h("head")(head),
+        h("body")(
+            h("div")(
+                h("h2")("Injury Report"),
+                h("table", klass="table table-responsive table-bordered")(
+                    h("thead", klass="table-light")(
+                        h("tr")(
+                            h("th", klass="text-center", bgcolor="gray", scope="col")("#"),
+                            h("th", klass="text-center", bgcolor="gray", scope="col")("Équipe"),
+                            h("th", klass="text-center", bgcolor="gray", scope="col")("Adversaire"),
+                            injury_status_header("#007500", "PROBABLE", "(80% de chances de jouer)"),
+                            injury_status_header("#778A35", "QUESTIONABLE", "(50% de chances de jouer)"),
+                            injury_status_header("#A35900", "DOUBTFUL", "(25% de chances de jouer)"),
+                            injury_status_header("#8B0903", "OUT", "(0% de chances de jouer)")
+                        )
+                    ),
+                    h("tbody", klass="table-group-divider")(
+                        h("tr")(
+                            h("th", scope="row")(index + 1),
+                            h("td")(h("img", src=report.team.logo()), f" {report.team.full_name()}"),
+                            h("td", klass="text-center")(
+                                h("span")(f"{report.location.value[1]} "),
+                                h("img", src=report.opponent.logo())
+                            ),
+                            html_cell_for_injury_status(report, PlayerInjuryStatus.PROBABLE),
+                            html_cell_for_injury_status(report, PlayerInjuryStatus.QUESTIONABLE),
+                            html_cell_for_injury_status(report, PlayerInjuryStatus.DOUBTFUL),
+                            html_cell_for_injury_status(report, PlayerInjuryStatus.OUT)
+                        ) for index, report in enumerate(reports))
+                )
+            )
+        )
+    ).render()
+
+
+def injury_status_header(bg_color: str, title: str, description: str) -> _h:
+    return h("th", klass="text-center", scope="col", style="color:white;", bgcolor=bg_color)(
+        h("span", style="font-weight:bold;")(title), h("br"), h("span")(description),
+    )
+
+
+def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjuryStatus) -> _h:
+    return h("td", klass="text-center")(
+        raw(f"{player.name}<br>") for player in report.players_with_status(status)
+    )
+
+
+def latest_injury_report_url() -> str:
+    response = requests.get("https://official.nba.com/nba-injury-report-2022-23-season/")
+    soup = BeautifulSoup(response.text, "html.parser")
+    injury_reports = soup.select("div[class~=post-injury] a")
+
+    return [report.get("href") for report in injury_reports][-1]
+
+
 def html_gamelog(gamelog_for_player: list[tuple[Player, Gamelog]]) -> _h:
     sorted_by_ttfl_average: list[tuple[Player, Gamelog]] = sorted(
         gamelog_for_player,
@@ -112,8 +181,8 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
                         h("span")(Emoji.stopwatch.html())
                     ),
                     h("td", klass="text-center")(
-                        result.ttfl_stats.score,
-                        emojis.from_ttfl_score(result.ttfl_stats.score).html()
+                        h("span", style="font-weight:bold;")(result.ttfl_stats.score),
+                        scores.to_emoji(result.ttfl_stats.score).html()
                     )
                 ) for (index, result) in enumerate(g.entries))
             )
@@ -130,3 +199,7 @@ head = (
       ),
     h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")
 )
+
+if __name__ == '__main__':
+    hti = Html2Image()
+    hti.screenshot(url='http://127.0.0.1:5000/injuries', save_as='python_org.png')

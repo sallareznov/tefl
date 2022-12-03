@@ -1,4 +1,3 @@
-import math
 from datetime import datetime
 
 import pandas
@@ -38,7 +37,7 @@ def gamelog_entry(data_frame: DataFrame, index: int) -> GamelogEntry:
     date = datetime.strptime(date_str, '%Y-%m-%d')
 
     opponent_short_name = data_frame["Opp"][index]
-    opponent = next(team for team in list(Team) if team.value[2] == opponent_short_name)
+    opponent = Team.with_basketball_reference_id(opponent_short_name)
 
     game_location_text = data_frame["Unnamed: 5"][index]
     location = GameLocation.AWAY if game_location_text == "@" else GameLocation.HOME

@@ -1,6 +1,7 @@
 from bs4 import Tag
 from pandas import DataFrame
 
+from emojis import Emoji
 from games import GameRealStats, GameTTFLStats
 
 
@@ -70,3 +71,27 @@ def game_stats(line: Tag):
         free_throws_attempted=free_throws_attempted,
         turnovers=turnovers
     )
+
+
+def to_emoji(ttfl_score: int) -> Emoji:
+    match ttfl_score:
+        case _ if ttfl_score < 10:
+            return Emoji.face_vomiting
+        case _ if ttfl_score < 20:
+            return Emoji.expressionless
+        case _ if ttfl_score < 30:
+            return Emoji.face_with_rolling_eyes
+        case _ if ttfl_score < 35:
+            return Emoji.unamused
+        case _ if ttfl_score < 40:
+            return Emoji.sweat_smile
+        case _ if ttfl_score < 45:
+            return Emoji.blush
+        case _ if ttfl_score < 50:
+            return Emoji.smile
+        case _ if ttfl_score < 60:
+            return Emoji.sunglasses
+        case _ if ttfl_score < 80:
+            return Emoji.heart_eyes
+        case _:
+            return Emoji.exploding_head

@@ -37,11 +37,11 @@ class GameTTFLStats:
 
 
 class GameLocation(Enum):
-    HOME = "Dom.", Emoji.house
-    AWAY = "Ext.", Emoji.airplane
+    HOME = "Dom.", "VS", Emoji.house
+    AWAY = "Ext.", "@", Emoji.airplane
 
     def html(self):
-        return frag(self.value[0], self.value[1].html())
+        return frag(self.value[0], self.value[2].html())
 
 
 @dataclass
