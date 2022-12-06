@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -70,8 +71,9 @@ def transform_frame(frame: DataFrame) -> DataFrame:
     frame = frame.iloc[1:, :]
 
     name_column = frame["Player Name Current Status"].apply(
-        lambda x: " ".join(str(x).split(" ")[:-1][::-1]).replace(",", "")
+        lambda x: extract_name_column(x)
     )
+
     status_column = frame["Player Name Current Status"].apply(lambda x: str(x).split(" ")[-1])
 
     frame = frame.join(status_column.to_frame(name="Current Status"))
@@ -82,6 +84,16 @@ def transform_frame(frame: DataFrame) -> DataFrame:
     # frame = frame.loc[str(frame["Current Status"]).isdigit() is True]
 
     return frame
+
+
+def extract_name_column(x):
+    match x:
+        case _ if pd.isnull(x) | bool(re.search("Page \d of \d", str(x))):
+            return x
+        case _:
+            last_name, first_name_and_status = str(x).split(",")
+            _, first_name, status = first_name_and_status.split(" ")
+            return f"{first_name} {last_name}"
 
 
 def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
@@ -104,6 +116,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
         if matchup not in ["nan", "Matchup"]:
             away_team, home_team = competitors(matchup)
 
+        # TODO improve
         match team:
             case _ if str(row["Game Date"]) == tomorrow_str:
                 break
