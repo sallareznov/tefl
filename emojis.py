@@ -7,6 +7,7 @@ from tinyhtml import raw
 class Emoji(Enum):
     airplane = 9992
     blush = 128522
+    chair = 129681
     exploding_head = 129327
     expressionless = 128529
     face_vomiting = 129326
@@ -14,10 +15,10 @@ class Emoji(Enum):
     heart_eyes = 128525
     house = 127968
     smile = 128516
+    stadium = 127967
     stopwatch = 9201
     sunglasses = 128526
     sweat_smile = 128517
     unamused = 128530
 
-    def html(self):
-        return raw(f" &#{self.value};")
+    def html(self): return raw(f" &#{self.value};")

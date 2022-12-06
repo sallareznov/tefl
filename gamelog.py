@@ -1,63 +1,69 @@
 from datetime import datetime
 
-import pandas
-from pandas import DataFrame
+from nba_api.stats.endpoints import PlayerGameLog
 from unidecode import unidecode
 
-import basketball_reference_urls
-import scores
-from games import Gamelog, GameLocation, GamelogEntry
-from players import Player
+from games import Gamelog, GameLocation, GamelogEntry, GameRealStats
+from save_players_to_db import PlayerInfo
 from teams import Team
 
 
-def matching_players(players: list[Player], search: str) -> list[Player]:
-    return [player for player in players if unidecode(search).lower() in unidecode(player.name).lower()]
+def matching_players(search: str, players: list[PlayerInfo]) -> list[PlayerInfo]:
+    """
+    Find players whose name matches the search
+
+    :param players: the players to filter in
+    :param search: the term to search for
+    :return: the list of players whose full name contains the search
+    """
+    return [player for player in players if matches(search, player.name)]
 
 
-def compute_gamelog(player: Player) -> Gamelog:
-    data_frame = pandas.read_html(
-        basketball_reference_urls.player_gamelog_url(player.profile_uri),
-        match="2022-23 Regular Season"
-    )[0]
+def matches(search: str, player_name: str) -> bool:
+    normalized_search = unidecode(search).lower().replace(".", "").replace("'", "").replace(" ", "")
+    normalized_player_name = unidecode(player_name).lower().replace(".", "").replace("'", "").replace(" ", "")
+    return normalized_search in normalized_player_name
 
-    gamelog_entries = [
-        gamelog_entry(data_frame, i)
-        for i in range(data_frame.index.stop)
-        if data_frame["GS"][i] in [0, "0", 1, "1"]
-    ]
 
+def compute_gamelog(player: PlayerInfo) -> Gamelog:
+    gamelog = PlayerGameLog(player.id).get_dict()["resultSets"][0]["rowSet"]
+    gamelog_entries = [gamelog_entry(player, game) for game in gamelog]
     return Gamelog(entries=gamelog_entries)
 
 
-def gamelog_entry(data_frame: DataFrame, index: int) -> GamelogEntry:
-    date_str = data_frame["Date"][index]
-    date = datetime.strptime(date_str, '%Y-%m-%d')
+def extract_matchup_info(matchup: str) -> tuple[GameLocation, Team]:
+    _, location_str, opponent_tricode = matchup.split(" ")
+    location = GameLocation.from_str(location_str)
+    opponent_team = Team.with_nba_tricode(opponent_tricode)
+    return location, opponent_team
 
-    opponent_short_name = data_frame["Opp"][index]
-    opponent = Team.with_basketball_reference_id(opponent_short_name)
 
-    game_location_text = data_frame["Unnamed: 5"][index]
-    location = GameLocation.AWAY if game_location_text == "@" else GameLocation.HOME
+def gamelog_entry(player: PlayerInfo, game: dict) -> GamelogEntry:
+    date = datetime.strptime(game[3], "%b %d, %Y")
 
-    time_played = data_frame["MP"][index]
-    (minutes, seconds) = [int(x) for x in time_played.split(":")]
-    minutes_played = minutes if seconds <= 30 else minutes + 1
+    matchup = game[4]
+    location, opponent = extract_matchup_info(matchup)
+    minutes_played = game[6]
 
-    real_stats = scores.game_real_stats(data_frame, index)
-    ttfl_stats = scores.game_ttfl_stats(real_stats)
+    real_stats = GameRealStats(
+        points=game[24],
+        rebounds=game[18],
+        assists=game[19],
+        steals=game[20],
+        blocks=game[21],
+        field_goals_made=game[7],
+        field_goals_attempted=game[8],
+        three_pointers_made=game[10],
+        three_pointers_attempted=game[11],
+        free_throws_made=game[13],
+        free_throws_attempted=game[14],
+        turnovers=game[22]
+    )
 
     return GamelogEntry(
         date=date,
         opponent=opponent,
         location=location,
         minutes_played=minutes_played,
-        real_stats=real_stats,
-        ttfl_stats=ttfl_stats
+        real_stats=real_stats
     )
-
-
-
-
-
-

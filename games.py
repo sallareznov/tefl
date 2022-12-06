@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from statistics import mean
 
-from tinyhtml import frag
+from nba_api.stats.endpoints import TeamVsPlayer
 
 from emojis import Emoji
 from teams import Team
@@ -37,14 +37,20 @@ class GameTTFLStats:
 
 
 class GameLocation(Enum):
-    HOME = "Dom.", "VS", Emoji.house
-    AWAY = "Ext.", "@", Emoji.airplane
+    HOME = "vs.", Emoji.house
+    AWAY = "@", Emoji.airplane
 
-    def html(self):
-        return frag(self.value[0], self.value[2].html())
+    def label(self) -> str: return self.value[0]
+
+    def emoji(self) -> Emoji: return self.value[1]
+
+    @staticmethod
+    def from_str(location_str: str):
+        return [loc for loc in list(GameLocation) if loc.value[0] == location_str][0]
+
+    def html(self): return self.value[1].html()
 
 
-@dataclass
 class GamelogEntry:
     date: datetime
     opponent: Team
@@ -52,6 +58,21 @@ class GamelogEntry:
     minutes_played: int
     real_stats: GameRealStats
     ttfl_stats: GameTTFLStats
+
+    def __init__(
+            self,
+            date: datetime,
+            opponent: Team,
+            location: GameLocation,
+            minutes_played: int,
+            real_stats: GameRealStats
+    ):
+        self.date = date
+        self.opponent = opponent
+        self.location = location
+        self.minutes_played = minutes_played
+        self.real_stats = real_stats
+        self.ttfl_stats = game_ttfl_stats(real_stats)
 
 
 class Gamelog:
@@ -64,3 +85,14 @@ class Gamelog:
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]
         self.ttfl_average = 0 if not ttfl_scores else round(mean(ttfl_scores), 1)
+
+
+def game_ttfl_stats(real_stats: GameRealStats) -> GameTTFLStats:
+    bonus = real_stats.points + real_stats.rebounds + real_stats.assists + real_stats.steals + real_stats.blocks \
+            + real_stats.field_goals_made + real_stats.three_pointers_made + real_stats.free_throws_made
+    field_goals_missed = real_stats.field_goals_attempted - real_stats.field_goals_made
+    three_pointers_missed = real_stats.three_pointers_attempted - real_stats.three_pointers_made
+    free_throws_missed = real_stats.free_throws_attempted - real_stats.free_throws_made
+    malus = field_goals_missed + three_pointers_missed + free_throws_missed + real_stats.turnovers
+
+    return GameTTFLStats(bonus=bonus, malus=malus)

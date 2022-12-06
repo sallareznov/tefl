@@ -1,58 +1,62 @@
-import asyncio
 import sqlite3
-from itertools import chain
-from typing import Coroutine, Any
+from dataclasses import dataclass
 
-from aiohttp import ClientSession
-from bs4 import BeautifulSoup, Tag
-
-import basketball_reference_urls
-from players import Player
-from teams import Team
+from nba_api.stats.endpoints import CommonAllPlayers
 
 connection = sqlite3.connect("players.db")
 
 
-async def all_players_from_teams(teams: list[Team]):
-    async with ClientSession() as session:
-        tasks: list[Coroutine[Any, Any, list[Player]]] = [roster(team, session) for team in teams]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-    return results
+@dataclass
+class PlayerInfo:
+    id: int
+    name: str
+    team_id: str
+    team_tricode: str
 
 
-async def roster(team: Team, session: ClientSession) -> list[Player]:
-    r = await session.request('GET', url=basketball_reference_urls.team_url(team.value[2]))
-    text: str = await r.text()
-    soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
-
-    return [extract_player_info(player) for player in soup.select("table#roster > tbody > tr")]
+def all_players():
+    all = CommonAllPlayers(is_only_current_season=1).get_dict()["resultSets"][0]["rowSet"]
+    return [player_info(player) for player in all]
 
 
-def extract_player_info(player_tag: Tag) -> Player:
-    player_name_tag = player_tag.select_one("td[data-stat='player']")
-    player_profile_tag = player_name_tag.select_one("a")
-    player_name = player_profile_tag.text
-    player_profile_uri = player_profile_tag.get("href").split(".")[0]
-    return Player(name=player_name, profile_uri=player_profile_uri)
+def player_info(player: dict):
+    return PlayerInfo(
+        id=player[0],
+        name=player[2],
+        team_id=player[8],
+        team_tricode=player[11]
+    )
 
 
 def init_player_table():
     connection.execute(
         """
+            CREATE TABLE IF NOT EXISTS team(
+                id INTEGER PRIMARY KEY,
+                tricode TEXT NOT NULL
+            )
+        """
+    )
+    connection.execute(
+        """
             CREATE TABLE IF NOT EXISTS player(
-                name TEXT PRIMARY KEY,
-                profile_uri TEXT
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                team TEXT NOT NULL,
+                FOREIGN KEY(team) REFERENCES team(id)
             )
         """
     )
 
 
-def insert_players_into_table(players: list[Player]):
-    records = [(player.name, player.profile_uri) for player in players]
-    connection.executemany("INSERT INTO player(name, profile_uri) VALUES (?, ?)", records)
+def insert_players_into_table(players: list[PlayerInfo]):
+    team_records = [(player.team_id, player.team_tricode) for player in players]
+    player_records = [(player.id, player.name, player.team_id) for player in players]
+    connection.executemany("INSERT OR IGNORE INTO team(id, tricode) VALUES (?, ?)", team_records)
+    connection.executemany("INSERT INTO player(id, name, team) VALUES (?, ?, ?)", player_records)
 
 
-def save_players(players: list[Player]):
+def save_players(players: list[PlayerInfo]):
     init_player_table()
     insert_players_into_table(players)
     connection.commit()
@@ -60,6 +64,5 @@ def save_players(players: list[Player]):
 
 
 if __name__ == '__main__':
-    all_teams: list[Team] = list(Team)
-    all_players: list[Player] = list(chain(*asyncio.run(all_players_from_teams(all_teams))))
+    all_players = all_players()
     save_players(all_players)

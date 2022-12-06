@@ -1,5 +1,7 @@
 # Thiapathioly ES Fantasy League (TEFL)
 
+
+
 ## Use cases
 
 - save players to database (one-time thing)
@@ -68,12 +70,6 @@ end note
 - sort and display as a list, for each element:
     - player name
     - player TTFL average
-
-### Injury report of a team
-
-if __name__ == '__main__':
-    today = datetime.now().strftime("%Y%m%d")
-    tomorrow = datetime.now().strftime("%Y%m%d")
 
 ### TTFL scores of a player against a team for the two-three last years
 

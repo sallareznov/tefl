@@ -1,12 +1,11 @@
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum, auto
 
 import numpy as np
 import pandas as pd
 import tabula
 from pandas import DataFrame
-from pytz import timezone
 
 from games import GameLocation
 from teams import Team
@@ -36,6 +35,9 @@ class InjuredPlayer:
     reason: str
 
 
+# premium: bool
+
+
 @dataclass
 class TeamInjuryReport:
     team: Team
@@ -59,7 +61,7 @@ class TeamInjuryReport:
 
 def competitors(game: str) -> (Team, Team):
     (away_team_id, home_team_id) = game.split("@")
-    return Team.with_nba_id(away_team_id), Team.with_nba_id(home_team_id)
+    return Team.with_nba_tricode(away_team_id), Team.with_nba_tricode(home_team_id)
 
 
 def transform_frame(frame: DataFrame) -> DataFrame:
@@ -105,47 +107,58 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
         match team:
             case _ if str(row["Game Date"]) == tomorrow_str:
                 break
-            case _ if away_team.equals(team) and reason == "NOT YET SUBMITTED":
-                all_reports.append(current_report)
-                current_report = TeamInjuryReport(
-                    team=away_team,
-                    opponent=home_team,
-                    location=GameLocation.AWAY,
-                    state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
-                    injured_players=[]
-                )
-            case _ if home_team.equals(team) and reason == "NOT YET SUBMITTED":
-                all_reports.append(current_report)
-                current_report = TeamInjuryReport(
-                    team=home_team,
-                    opponent=away_team,
-                    location=GameLocation.HOME,
-                    state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
-                    injured_players=[]
-                )
-            case _ if away_team.equals(team):
-                all_reports.append(current_report)
-                current_report = TeamInjuryReport(
-                    team=away_team,
-                    opponent=home_team,
-                    location=GameLocation.AWAY,
-                    state=TeamInjuryReportStatus.SUBMITTED,
-                    injured_players=[]
-                )
-                current_report.add_player(player_name, status, reason)
-            case _ if home_team.equals(team):
-                all_reports.append(current_report)
-                current_report = TeamInjuryReport(
-                    team=home_team,
-                    opponent=away_team,
-                    location=GameLocation.HOME,
-                    state=TeamInjuryReportStatus.SUBMITTED,
-                    injured_players=[]
-                )
-                current_report.add_player(player_name, status, reason)
+            case _ if away_team.full_name() == team:
+                match reason:
+                    case "NOT YET SUBMITTED":
+                        all_reports.append(current_report)
+                        current_report = init_report(
+                            away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.NOT_YET_SUBMITTED
+                        )
+                    case _:
+                        all_reports.append(current_report)
+                        current_report = init_report(
+                            away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.SUBMITTED
+                        )
+                        current_report.add_player(player_name, status, reason)
+            case _ if home_team.full_name() == team:
+                match reason:
+                    case "NOT YET SUBMITTED":
+                        all_reports.append(current_report)
+                        current_report = TeamInjuryReport(
+                            team=home_team,
+                            opponent=away_team,
+                            location=GameLocation.HOME,
+                            state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
+                            injured_players=[]
+                        )
+                    case _:
+                        all_reports.append(current_report)
+                        current_report = TeamInjuryReport(
+                            team=home_team,
+                            opponent=away_team,
+                            location=GameLocation.HOME,
+                            state=TeamInjuryReportStatus.SUBMITTED,
+                            injured_players=[]
+                        )
+                        current_report.add_player(player_name, status, reason)
             case _ if (status not in ["nan", "Current Status"]) and not status.isdigit():
                 current_report.add_player(player_name, status, reason)
 
     all_reports.append(current_report)
 
     return [report for report in all_reports if report is not None]
+
+
+def init_report(
+        team: Team,
+        opponent: Team,
+        location: GameLocation,
+        state: TeamInjuryReportStatus
+) -> TeamInjuryReport:
+    return TeamInjuryReport(
+        team=team,
+        opponent=opponent,
+        location=location,
+        state=state,
+        injured_players=[]
+    )
