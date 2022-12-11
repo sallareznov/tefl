@@ -10,10 +10,9 @@ import gamelog
 import injury_reports
 import live_scores
 import players
-from players import Player
-import urls
 from games import Gamelog, GameLocation
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
+from players import Player
 from players_db import get_players_from_db
 from teams import Team
 
@@ -144,7 +143,7 @@ def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
             )
 
 
-def matchup_html(location: GameLocation, opponent: Team): return location.html_with_text(), " ", opponent.logo()
+def matchup_html(location: GameLocation, opponent: Team): return location.html_with_text(), " ", opponent.logo_html()
 
 
 def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjuryStatus):
@@ -154,7 +153,7 @@ def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjurySt
 
 
 def latest_injury_report_url() -> str:
-    response = requests.get(urls.injury_report)
+    response = requests.get("https://official.nba.com/nba-injury-report-2022-23-season/")
     soup = BeautifulSoup(response.text, "html.parser")
     injury_reports = soup.select("div[class~=post-injury] a")
 

@@ -2,8 +2,6 @@ from enum import Enum
 
 from tinyhtml import h
 
-import urls
-
 
 class Team(Enum):
     """
@@ -40,7 +38,11 @@ class Team(Enum):
     PELICANS = "New Orleans", "Pelicans", "NOP", "NO"
     SPURS = "San Antonio", "Spurs", "SAS", "SA"
 
-    def logo(self) -> h: return h("img", src=urls.team_logo(self.espn_code().lower()))
+    @staticmethod
+    def logo_url(team_short_name: str) -> str:
+        return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{team_short_name}.png&h=25&w=25"
+
+    def logo_html(self) -> h: return h("img", src=self.logo_url(self.espn_code().lower()))
 
     def city(self) -> str: return self.value[0]
 
@@ -52,9 +54,9 @@ class Team(Enum):
 
     def espn_code(self) -> str: return self.value[3]
 
-    def html_with_nickname(self): return self.logo(), " ", self.nickname()
+    def html_with_nickname(self): return self.logo_html(), " ", self.nickname()
 
-    def html_with_full_name(self): return self.logo(), " ", self.full_name()
+    def html_with_full_name(self): return self.logo_html(), " ", self.full_name()
 
     def is_valid_nba_code(self, nba_code: str) -> bool: return self.nba_code() == nba_code
 

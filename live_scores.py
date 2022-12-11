@@ -34,7 +34,7 @@ class PlayerLiveGameInfo:
     on_court: bool
 
     def name_html(self):
-        return self.team.logo(), " ", self.name
+        return self.team.logo_html(), " ", self.name
 
     def opponent_team_html(self):
         return self.location.emoji().html(), " ", self.opponent_team.nickname()
@@ -42,9 +42,9 @@ class PlayerLiveGameInfo:
     def game_score_html(self):
         match self.location:
             case GameLocation.HOME:
-                return self.opponent_team.logo(), f" {self.opponent_team_score} - {self.team_score} ", self.team.logo()
+                return self.opponent_team.logo_html(), f" {self.opponent_team_score} - {self.team_score} ", self.team.logo_html()
             case GameLocation.AWAY:
-                return self.team.logo(), f" {self.team_score} - {self.opponent_team_score} ", self.opponent_team.logo()
+                return self.team.logo_html(), f" {self.team_score} - {self.opponent_team_score} ", self.opponent_team.logo_html()
 
     def minutes_played_html(self):
         return self.minutes_played, " ", Emoji.stopwatch.html()
