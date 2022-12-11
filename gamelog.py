@@ -11,6 +11,7 @@ from teams import Team
 def compute_gamelog(player: Player) -> Gamelog:
     headers = {
         'Host': 'stats.nba.com',
+        'Origin': 'stats.nba.com',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'en-US,en;q=0.5',
