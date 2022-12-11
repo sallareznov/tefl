@@ -9,7 +9,6 @@ from teams import Team
 
 
 def compute_gamelog(player: Player) -> Gamelog:
-    time.sleep(5)
     gamelog = PlayerGameLog(player.id).get_dict()["resultSets"][0]["rowSet"]
     return Gamelog(entries=[gamelog_entry(game) for game in gamelog])
 
