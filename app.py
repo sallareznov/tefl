@@ -9,12 +9,12 @@ from tinyhtml import _h, html, h, raw
 import gamelog
 import injury_reports
 import live_scores
+import players
+from players import Player
 import urls
-from emojis import Emoji
 from games import Gamelog, GameLocation
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
 from players_db import get_players_from_db
-from save_players_to_db import PlayerInfo
 from teams import Team
 
 app = Flask(__name__)
@@ -25,10 +25,10 @@ all_players = get_players_from_db()
 @app.route("/gamelog/<search>")
 def player_ttfl_gamelog(search: str):
     assert search.__len__() >= 2
-    matching_players = gamelog.matching_players(search, all_players)
+    matching_players = players.matching_players(search, all_players)
     gamelog_for_player = [(player, gamelog.compute_gamelog(player)) for player in matching_players]
 
-    sorted_by_ttfl_average: list[tuple[PlayerInfo, Gamelog]] = sorted(
+    sorted_by_ttfl_average: list[tuple[Player, Gamelog]] = sorted(
         gamelog_for_player,
         key=lambda t: t[1].ttfl_average,
         reverse=True
@@ -121,32 +121,33 @@ def injury_status_header(bg_color: str, title: str, description: str) -> _h:
 
 
 def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
-    if report.state == TeamInjuryReportStatus.SUBMITTED:
-        return h("tr")(
-            h("th", scope="row")(index + 1),
-            h("td")(report.team.html_with_full_name()),
-            h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
-            html_cell_for_injury_status(report, PlayerInjuryStatus.PROBABLE),
-            html_cell_for_injury_status(report, PlayerInjuryStatus.QUESTIONABLE),
-            html_cell_for_injury_status(report, PlayerInjuryStatus.DOUBTFUL),
-            html_cell_for_injury_status(report, PlayerInjuryStatus.OUT)
-        )
-    else:
-        return h("tr", bgcolor="#C0C0C0")(
-            h("th", scope="row")(index + 1),
-            h("td")(report.team.html_with_full_name()),
-            h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
-            h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
-            h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
-            h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
-            h("td", klass="text-center")("PAS ENCORE PUBLIÉ")
-        )
+    match report.status:
+        case TeamInjuryReportStatus.SUBMITTED:
+            return h("tr")(
+                h("th", scope="row")(index + 1),
+                h("td")(report.team.html_with_full_name()),
+                h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
+                report.html_cell_for_injury_status(PlayerInjuryStatus.PROBABLE),
+                report.html_cell_for_injury_status(PlayerInjuryStatus.QUESTIONABLE),
+                report.html_cell_for_injury_status(PlayerInjuryStatus.DOUBTFUL),
+                report.html_cell_for_injury_status(PlayerInjuryStatus.OUT)
+            )
+        case TeamInjuryReportStatus.NOT_YET_SUBMITTED:
+            return h("tr", bgcolor="#C0C0C0")(
+                h("th", scope="row")(index + 1),
+                h("td")(report.team.html_with_full_name()),
+                h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
+                h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
+                h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
+                h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
+                h("td", klass="text-center")("PAS ENCORE PUBLIÉ")
+            )
 
 
-def matchup_html(location: GameLocation, opponent: Team): h("span")(f"{location.value[1]} "), opponent.logo()
+def matchup_html(location: GameLocation, opponent: Team): return location.html_with_text(), " ", opponent.logo()
 
 
-def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjuryStatus) -> _h:
+def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjuryStatus):
     return h("td", klass="text-center")(
         raw(f"{player.name}<br>") for player in report.players_with_status(status)
     )
@@ -160,7 +161,7 @@ def latest_injury_report_url() -> str:
     return [report.get("href") for report in injury_reports][-1]
 
 
-def single_player_gamelog(gamelog_for_player: tuple[PlayerInfo, Gamelog]):
+def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
     (p, g) = gamelog_for_player
 
     return h("div")(
@@ -181,45 +182,13 @@ def single_player_gamelog(gamelog_for_player: tuple[PlayerInfo, Gamelog]):
                     h("th", scope="row")(index + 1),
                     h("td")(result.date.strftime("%d-%m-%Y")),
                     h("td")(result.opponent.html_with_nickname()),
-                    h("td", klass="text-center")(result.location.html()),
-                    h("td", klass="text-center")(minutes_played_html(result.minutes_played)),
-                    h("td", klass="text-center")(ttfl_score_html_with_emoji(result.ttfl_stats.score))
+                    h("td", klass="text-center")(result.location.html_with_emoji()),
+                    h("td", klass="text-center")(result.minutes_played_html()),
+                    h("td", klass="text-center")(result.ttfl_stats.html())
                 ) for (index, result) in enumerate(g.entries)
             )
         )
     )
-
-
-def minutes_played_html(minutes_played: int):
-    return f"{minutes_played} ", h("span")(Emoji.stopwatch.html())
-
-
-def ttfl_score_html_with_emoji(ttfl_score: int):
-    return h("span", style="font-weight:bold;")(ttfl_score), score_to_emoji(ttfl_score).html()
-
-
-def score_to_emoji(ttfl_score: int) -> Emoji:
-    match ttfl_score:
-        case _ if ttfl_score < 10:
-            return Emoji.face_vomiting
-        case _ if ttfl_score < 20:
-            return Emoji.expressionless
-        case _ if ttfl_score < 30:
-            return Emoji.face_with_rolling_eyes
-        case _ if ttfl_score < 35:
-            return Emoji.unamused
-        case _ if ttfl_score < 40:
-            return Emoji.sweat_smile
-        case _ if ttfl_score < 45:
-            return Emoji.blush
-        case _ if ttfl_score < 50:
-            return Emoji.smile
-        case _ if ttfl_score < 60:
-            return Emoji.sunglasses
-        case _ if ttfl_score < 80:
-            return Emoji.heart_eyes
-        case _:
-            return Emoji.exploding_head
 
 
 head = (

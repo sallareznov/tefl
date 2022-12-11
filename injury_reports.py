@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import tabula
 from pandas import DataFrame
+from tinyhtml import _h, h, raw
 
 from games import GameLocation
 from teams import Team
@@ -34,9 +35,7 @@ class InjuredPlayer:
     name: str
     status: PlayerInjuryStatus
     reason: str
-
-
-# premium: bool
+    # premium: bool
 
 
 @dataclass
@@ -44,7 +43,7 @@ class TeamInjuryReport:
     team: Team
     opponent: Team
     location: GameLocation
-    state: TeamInjuryReportStatus
+    status: TeamInjuryReportStatus
     injured_players: list[InjuredPlayer]
 
     def add_player(self, name: str, status: str, reason: str):
@@ -58,6 +57,11 @@ class TeamInjuryReport:
 
     def players_with_status(self, status: PlayerInjuryStatus):
         return [player for player in self.injured_players if player.status == status]
+
+    def html_cell_for_injury_status(self, status: PlayerInjuryStatus) -> _h:
+        return h("td", klass="text-center")(
+            raw(f"{player.name}<br>") for player in self.players_with_status(status)
+        )
 
 
 def competitors(game: str) -> (Team, Team):
@@ -141,7 +145,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                             team=home_team,
                             opponent=away_team,
                             location=GameLocation.HOME,
-                            state=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
+                            status=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
                             injured_players=[]
                         )
                     case _:
@@ -150,7 +154,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                             team=home_team,
                             opponent=away_team,
                             location=GameLocation.HOME,
-                            state=TeamInjuryReportStatus.SUBMITTED,
+                            status=TeamInjuryReportStatus.SUBMITTED,
                             injured_players=[]
                         )
                         current_report.add_player(player_name, status, reason)
@@ -166,12 +170,12 @@ def init_report(
         team: Team,
         opponent: Team,
         location: GameLocation,
-        state: TeamInjuryReportStatus
+        status: TeamInjuryReportStatus
 ) -> TeamInjuryReport:
     return TeamInjuryReport(
         team=team,
         opponent=opponent,
         location=location,
-        state=state,
+        status=status,
         injured_players=[]
     )

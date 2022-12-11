@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from statistics import mean
 
-from nba_api.stats.endpoints import TeamVsPlayer
+from tinyhtml import h
 
 from emojis import Emoji
 from teams import Team
@@ -35,6 +35,31 @@ class GameTTFLStats:
         self.malus = malus
         self.score = bonus - malus
 
+    def html(self):
+        return h("span", style="font-weight:bold;")(self.score), self.to_emoji().html()
+
+    def to_emoji(self) -> Emoji:
+        if self.score < 10:
+            return Emoji.face_vomiting
+        if self.score < 20:
+            return Emoji.expressionless
+        if self.score < 30:
+            return Emoji.face_with_rolling_eyes
+        if self.score < 35:
+            return Emoji.unamused
+        if self.score < 40:
+            return Emoji.sweat_smile
+        if self.score < 45:
+            return Emoji.blush
+        if self.score < 50:
+            return Emoji.smile
+        if self.score < 60:
+            return Emoji.sunglasses
+        if self.score < 80:
+            return Emoji.heart_eyes
+        else:
+            return Emoji.exploding_head
+
 
 class GameLocation(Enum):
     HOME = "vs.", Emoji.house
@@ -45,10 +70,11 @@ class GameLocation(Enum):
     def emoji(self) -> Emoji: return self.value[1]
 
     @staticmethod
-    def from_str(location_str: str):
-        return [loc for loc in list(GameLocation) if loc.value[0] == location_str][0]
+    def from_str(location_str: str): return [loc for loc in list(GameLocation) if loc.label() == location_str][0]
 
-    def html(self): return self.value[1].html()
+    def html_with_emoji(self): return self.emoji().html()
+
+    def html_with_text(self): return self.label()
 
 
 class GamelogEntry:
@@ -73,6 +99,9 @@ class GamelogEntry:
         self.minutes_played = minutes_played
         self.real_stats = real_stats
         self.ttfl_stats = game_ttfl_stats(real_stats)
+
+    def minutes_played_html(self):
+        return self.minutes_played, " ", Emoji.stopwatch.html()
 
 
 class Gamelog:

@@ -56,7 +56,7 @@ class Team(Enum):
 
     def html_with_full_name(self): return self.logo(), " ", self.full_name()
 
-    @staticmethod
-    def with_nba_tricode(short_name: str): return [team for team in list(Team) if team.nba_code() == short_name][0]
+    def is_valid_nba_code(self, nba_code: str) -> bool: return self.nba_code() == nba_code
 
-    def equals(self, name: str) -> bool: return self.full_name() == name
+    @staticmethod
+    def with_nba_tricode(short_name: str): return [team for team in list(Team) if team.is_valid_nba_code(short_name)][0]
