@@ -21,6 +21,28 @@ app = Flask(__name__)
 all_players = get_players_from_db()
 
 
+@app.route("/")
+def home():
+    return html()(
+        h("head")(head),
+        h("body")(
+            h("div", klass="list-group")(
+                list_item("/live", "Live scores", "Scores TTFL en live de la soirée"),
+                list_item("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée")
+            )
+        )
+    ).render()
+
+
+def list_item(href: str, title: str, description: str) -> _h:
+    return h("a", href=href, klass="list-group-item list-group-item-action flex-column align-items-start")(
+        h("div", klass="d-flex w-100 justify-content-between")(
+            h("h5", klass="mb-1")(title)
+        ),
+        h("p", klass="mb-1")(description)
+    )
+
+
 @app.route("/gamelog/<search>")
 def player_ttfl_gamelog(search: str):
     assert search.__len__() >= 2
