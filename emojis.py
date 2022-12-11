@@ -14,6 +14,7 @@ class Emoji(Enum):
     face_with_rolling_eyes = 128580
     heart_eyes = 128525
     house = 127968
+    not_permitted = 128683
     smile = 128516
     stadium = 127967
     stopwatch = 9201
@@ -21,4 +22,4 @@ class Emoji(Enum):
     sweat_smile = 128517
     unamused = 128530
 
-    def html(self): return raw(f" &#{self.value};")
+    def html(self) -> raw: return raw(f" &#{self.value};")

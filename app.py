@@ -81,6 +81,8 @@ def live_ttfl_scores():
                             h("th", scope="col")("Adversaire"),
                             h("th", scope="col", klass="text-center")("Minutes jouées"),
                             h("th", scope="col", klass="text-center")("Terrain/Banc?"),
+                            h("th", scope="col", klass="text-center")("Fautes"),
+                            h("th", scope="col", klass="text-center")("Fautes techniques"),
                             h("th", scope="col", klass="text-center")("Temps du match"),
                             h("th", scope="col", klass="text-center")("Score du match"),
                         )
@@ -92,7 +94,9 @@ def live_ttfl_scores():
                             h("td", klass="text-center")(player_score.ttfl_score_html()),
                             h("td")(player_score.opponent_team_html()),
                             h("td", klass="text-center")(player_score.minutes_played_html()),
-                            h("td", klass="text-center")(player_score.on_court_emoji().html()),
+                            h("td", klass="text-center")(player_score.status.html()),
+                            h("td", klass="text-center")(player_score.personal_fouls),
+                            h("td", klass="text-center")(player_score.technical_fouls),
                             h("td", klass="text-center")(player_score.game_status),
                             h("td", klass="text-center")(player_score.game_score_html())
                         ) for index, player_score in enumerate(all_scores)

@@ -1,16 +1,35 @@
 import re
 from dataclasses import dataclass
+from enum import Enum
 from itertools import chain
 from json import JSONDecodeError
 
 from nba_api.live.nba.endpoints.boxscore import BoxScore
 from nba_api.live.nba.endpoints.scoreboard import ScoreBoard
-from tinyhtml import h, _h
+from tinyhtml import h, _h, raw
 
 import games
 from emojis import Emoji
 from games import GameRealStats, GameLocation
 from teams import Team
+
+
+class PlayerStatus(Enum):
+    ON_COURT = Emoji.stadium
+    ON_BENCH = Emoji.chair
+    OUT = Emoji.not_permitted
+
+    @staticmethod
+    def from_live_game(player: dict):
+        if "notPlayingReason" in player:
+            return PlayerStatus.OUT
+        if player["oncourt"] == "1":
+            return PlayerStatus.ON_COURT
+        else:
+            return PlayerStatus.ON_BENCH
+
+    def html(self) -> raw:
+        return self.value.html()
 
 
 @dataclass
@@ -24,14 +43,16 @@ class LiveGame:
 class PlayerLiveGameInfo:
     name: str
     team: Team
+    ttfl_score: int
+    minutes_played: int
     team_score: int
+    status: PlayerStatus
+    personal_fouls: int
+    technical_fouls: int
+    location: GameLocation
     opponent_team: Team
     opponent_team_score: int
-    location: GameLocation
-    minutes_played: int
-    ttfl_score: int
     game_status: str
-    on_court: bool
 
     def name_html(self):
         return self.team.logo_html(), " ", self.name
@@ -51,9 +72,6 @@ class PlayerLiveGameInfo:
 
     def ttfl_score_html(self) -> _h:
         return h("span", style="font-weight:bold;")(self.ttfl_score)
-
-    def on_court_emoji(self) -> Emoji:
-        return Emoji.stadium if self.on_court else Emoji.chair
 
 
 def live_ttfl_scores() -> list[PlayerLiveGameInfo]:
@@ -120,7 +138,7 @@ def player_live_score(
         game_status: str
 ) -> PlayerLiveGameInfo:
     name = player["nameI"]
-    on_court = bool(int(player["oncourt"]))
+    player_status = PlayerStatus.from_live_game(player)
 
     statistics = player["statistics"]
     minutes_played = int(re.findall("\d{2}", statistics["minutesCalculated"])[0])
@@ -136,6 +154,9 @@ def player_live_score(
     free_throws_made = statistics["freeThrowsMade"]
     free_throws_attempted = statistics["freeThrowsAttempted"]
     turnovers = statistics["turnovers"]
+    personal_fouls = statistics["foulsPersonal"]
+    technical_fouls = statistics["foulsTechnical"]
+
 
     stats = GameRealStats(
         points=points,
@@ -167,5 +188,7 @@ def player_live_score(
         minutes_played=minutes_played,
         ttfl_score=ttfl_stats.score,
         game_status=game_status,
-        on_court=on_court
+        status=player_status,
+        personal_fouls=personal_fouls,
+        technical_fouls=technical_fouls
     )
