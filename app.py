@@ -3,13 +3,13 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask
+from nba_api.stats import static
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
 import gamelog
 import injury_reports
 import live_scores
-import players
 from games import Gamelog, GameLocation
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
 from players import Player
@@ -27,8 +27,9 @@ def home():
         h("head")(head),
         h("body")(
             h("div", klass="list-group")(
-                list_item("/live", "Live scores", "Scores TTFL en live de la soirée"),
-                list_item("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée")
+                list_item("/live", "Scores en live", "Scores TTFL en live de la soirée"),
+                list_item("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée"),
+                list_item("/players", "Stats joueurs", "Stats TTFL de tous les joueurs qui ont joué cette saison")
             )
         )
     ).render()
@@ -43,24 +44,80 @@ def list_item(href: str, title: str, description: str) -> _h:
     )
 
 
-@app.route("/gamelog/<search>")
-def player_ttfl_gamelog(search: str):
-    assert search.__len__() >= 2
-    matching_players = players.matching_players(search, all_players)
-    gamelog_for_player = [(player, gamelog.compute_gamelog(player)) for player in matching_players]
-
-    sorted_by_ttfl_average: list[tuple[Player, Gamelog]] = sorted(
-        gamelog_for_player,
-        key=lambda t: t[1].ttfl_average,
-        reverse=True
-    )
-
+@app.route("/players")
+def list_all_players():
     return html()(
         h("head")(head),
         h("body")(
-            (single_player_gamelog(player) for player in sorted_by_ttfl_average)
+            h("input", type="text", id="myInput", onkeyup="filterPlayersByName()", placeholder="Nom du joueur...",
+              title="Type in a name"),
+            h("ul", id="myUL", klass="list-group")(
+                h("li", klass="list-group-item")(
+                    player.team().logo_html(),
+                    " ",
+                    h("a", href=f"/gamelog/{player.id}")(
+                        player.name
+                    )
+                ) for player in all_players
+            ),
+            h("script")(filter_players_by_name_script())
         )
     ).render()
+
+
+# TODO surnames (AD, KD...)
+def filter_players_by_name_script() -> raw:
+    return raw(
+        """
+            function filterPlayersByName() {
+                var input, filter, ul, li, a, i, txtValue;
+                input = document.getElementById("myInput");
+                filter = input.value.toUpperCase();
+                ul = document.getElementById("myUL");
+                li = ul.getElementsByTagName("li");
+                for (i = 0; i < li.length; i++) {
+                    a = li[i].getElementsByTagName("a")[0];
+                    txtValue = a.textContent || a.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        li[i].style.display = "";
+                    } else {
+                        li[i].style.display = "none";
+                    }
+                }
+            }
+        """
+    )
+
+@app.route("/gamelog/<player_id>")
+def gamelog_for_player(player_id: str):
+    gl = gamelog.compute_bis(player_id)
+
+    return html()(
+        h("head")(head),
+        h("body")(single_player_gamelog(gl))
+    ).render()
+
+
+# @app.route("/gamelog/<search>")
+# def player_ttfl_gamelog(search: str):
+#    assert search.__len__() >= 2
+#    matching_players = players.matching_players(search, all_players)
+#    gamelog_for_player = [(player, gamelog.compute_gamelog(player)) for player in matching_players]
+#
+#    sorted_by_ttfl_average: list[tuple[Player, Gamelog]] = sorted(
+#        gamelog_for_player,
+#        key=lambda t: t[1].ttfl_average,
+#        reverse=True
+#    )
+#
+#    return html()(
+#        h("head")(head),
+#        h("body")(
+#            h("ul")(
+#                h("li")(plaer)
+#            )
+#        )
+#    ).render()
 
 
 @app.route("/live")
@@ -81,8 +138,7 @@ def live_ttfl_scores():
                             h("th", scope="col")("Adversaire"),
                             h("th", scope="col", klass="text-center")("Minutes jouées"),
                             h("th", scope="col", klass="text-center")("Terrain/Banc?"),
-                            h("th", scope="col", klass="text-center")("Fautes"),
-                            h("th", scope="col", klass="text-center")("Fautes techniques"),
+                            h("th", scope="col", klass="text-center")("Fautes (Tech.)"),
                             h("th", scope="col", klass="text-center")("Temps du match"),
                             h("th", scope="col", klass="text-center")("Score du match"),
                         )
@@ -95,8 +151,7 @@ def live_ttfl_scores():
                             h("td")(player_score.opponent_team_html()),
                             h("td", klass="text-center")(player_score.minutes_played_html()),
                             h("td", klass="text-center")(player_score.status.html()),
-                            h("td", klass="text-center")(player_score.personal_fouls),
-                            h("td", klass="text-center")(player_score.technical_fouls),
+                            h("td", klass="text-center")(player_score.fouls_html()),
                             h("td", klass="text-center")(player_score.game_status),
                             h("td", klass="text-center")(player_score.game_score_html())
                         ) for index, player_score in enumerate(all_scores)
@@ -186,11 +241,9 @@ def latest_injury_report_url() -> str:
     return [report.get("href") for report in injury_reports][-1]
 
 
-def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
-    (p, g) = gamelog_for_player
-
+def single_player_gamelog(gamelog: Gamelog):
     return h("div")(
-        h("h2")(f"{p.name} [moyenne TTFL: {g.ttfl_average}]"),
+        h("h2")(gamelog.team.logo_html(), " ", gamelog.player, " ", f"[moyenne TTFL: {gamelog.ttfl_average}]"),
         h("table", klass="table table-sm table-responsive table-bordered")(
             h("thead", klass="table-light")(
                 h("tr")(
@@ -210,7 +263,7 @@ def single_player_gamelog(gamelog_for_player: tuple[Player, Gamelog]):
                     h("td", klass="text-center")(result.location.html_with_emoji()),
                     h("td", klass="text-center")(result.minutes_played_html()),
                     h("td", klass="text-center")(result.ttfl_stats.html())
-                ) for (index, result) in enumerate(g.entries)
+                ) for (index, result) in enumerate(gamelog.entries)
             )
         )
     )

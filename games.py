@@ -105,11 +105,15 @@ class GamelogEntry:
 
 
 class Gamelog:
+    player: str
+    team: Team
     entries: list[GamelogEntry]
     games_played: int
     ttfl_average: float
 
-    def __init__(self, entries: list[GamelogEntry]):
+    def __init__(self, player: str, team: Team, entries: list[GamelogEntry]):
+        self.player = player
+        self.team = team
         self.entries = sorted(entries, key=lambda entry: entry.date, reverse=True)
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]

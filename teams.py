@@ -1,64 +1,72 @@
 from enum import Enum
 
+from nba_api.stats.static.teams import find_team_by_abbreviation
 from tinyhtml import h
 
 
 class Team(Enum):
     """
-        city, nickname, nba tricode, espn tricode
+        nba abbreviation, espn abbreviation, ball-dont-lie id
     """
-    CELTICS = "Boston", "Celtics", "BOS", "BOS"
-    NETS = "Brooklyn", "Nets", "BKN", "BKN"
-    KNICKS = "New York", "Knicks", "NYK", "NY"
-    SIXERS = "Philadelphia", "76ers", "PHI", "PHI"
-    RAPTORS = "Toronto", "Raptors", "TOR", "TOR"
-    BULLS = "Chicago", "Bulls", "CHI", "CHI"
-    CAVALIERS = "Cleveland", "Cavaliers", "CLE", "CLE"
-    PISTONS = "Detroit", "Pistons", "DET", "DET"
-    PACERS = "Indiana", "Pacers", "IND", "IND"
-    BUCKS = "Milwaukee", "Bucks", "MIL", "MIL"
-    HAWKS = "Atlanta", "Hawks", "ATL", "ATL"
-    HORNETS = "Charlotte", "Hornets", "CHA", "CHA"
-    HEAT = "Miami", "Heat", "MIA", "MIA"
-    MAGIC = "Orlando", "Magic", "ORL", "ORL"
-    WIZARDS = "Washington", "Wizards", "WAS", "WSH"
-    NUGGETS = "Denver", "Nuggets", "DEN", "DEN"
-    WOLVES = "Minnesota", "Timberwolves", "MIN", "MIN"
-    THUNDER = "Oklahoma City", "Thunder", "OKC", "OKC"
-    BLAZERS = "Portland", "Trail Blazers", "POR", "POR"
-    JAZZ = "Utah", "Jazz", "UTA", "UTAH"
-    WARRIORS = "Golden State", "Warriors", "GSW", "GS"
-    CLIPPERS = "LA", "Clippers", "LAC", "LAC"
-    LAKERS = "Los Angeles", "Lakers", "LAL", "LAL"
-    SUNS = "Phoenix", "Suns", "PHX", "PHX"
-    KINGS = "Sacramento", "Kings", "SAC", "SAC"
-    MAVERICKS = "Dallas", "Mavericks", "DAL", "DAL"
-    ROCKETS = "Houston", "Rockets", "HOU", "HOU"
-    GRIZZLIES = "Memphis", "Grizzlies", "MEM", "MEM"
-    PELICANS = "New Orleans", "Pelicans", "NOP", "NO"
-    SPURS = "San Antonio", "Spurs", "SAS", "SA"
+    CELTICS = "BOS", "BOS", 2
+    NETS = "BKN", "BKN", 3
+    KNICKS = "NYK", "NY", 20
+    SIXERS = "PHI", "PHI", 23
+    RAPTORS = "TOR", "TOR", 28
+    BULLS = "CHI", "CHI", 5
+    CAVALIERS = "CLE", "CLE", 6
+    PISTONS = "DET", "DET", 9
+    PACERS = "IND", "IND", 12
+    BUCKS = "MIL", "MIL", 17
+    HAWKS = "ATL", "ATL", 1
+    HORNETS = "CHA", "CHA", 4
+    HEAT = "MIA", "MIA", 16
+    MAGIC = "ORL", "ORL", 22
+    WIZARDS = "WAS", "WSH", 30
+    NUGGETS = "DEN", "DEN", 8
+    WOLVES = "MIN", "MIN", 18
+    THUNDER = "OKC", "OKC", 21
+    BLAZERS = "POR", "POR", 25
+    JAZZ = "UTA", "UTAH", 29
+    WARRIORS = "GSW", "GS", 10
+    CLIPPERS = "LAC", "LAC", 13
+    LAKERS = "LAL", "LAL", 14
+    SUNS = "PHX", "PHX", 24
+    KINGS = "SAC", "SAC", 26
+    MAVERICKS = "DAL", "DAL", 7
+    ROCKETS = "HOU", "HOU", 11
+    GRIZZLIES = "MEM", "MEM", 15
+    PELICANS = "NOP", "NO", 19
+    SPURS = "SAS", "SA", 27
 
-    @staticmethod
-    def logo_url(team_short_name: str) -> str:
-        return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{team_short_name}.png&h=25&w=25"
+    def nba_abbreviation(self): return self.value[0]
 
-    def logo_html(self) -> h: return h("img", src=self.logo_url(self.espn_code().lower()))
+    def team(self): return find_team_by_abbreviation(self.nba_abbreviation())
 
-    def city(self) -> str: return self.value[0]
+    def espn_abbreviation(self): return self.value[1]
 
-    def nickname(self) -> str: return self.value[1]
+    def bdl_id(self): return self.value[2]
 
-    def full_name(self) -> str: return f"{self.city()} {self.nickname()}"
+    def logo_html(self) -> h: return h("img", src=self.logo_url(self.espn_abbreviation().lower()))
 
-    def nba_code(self) -> str: return self.value[2]
+    def city(self) -> str: return self.team()["city"]
 
-    def espn_code(self) -> str: return self.value[3]
+    def nickname(self) -> str: return self.team()["nickname"]
+
+    def full_name(self) -> str: return self.team()["full_name"]
 
     def html_with_nickname(self): return self.logo_html(), " ", self.nickname()
 
     def html_with_full_name(self): return self.logo_html(), " ", self.full_name()
 
-    def is_valid_nba_code(self, nba_code: str) -> bool: return self.nba_code() == nba_code
+    @staticmethod
+    def with_nba_abbreviation(abbreviation: str):
+        return [team for team in list(Team) if team.nba_abbreviation() == abbreviation][0]
 
     @staticmethod
-    def with_nba_tricode(short_name: str): return [team for team in list(Team) if team.is_valid_nba_code(short_name)][0]
+    def with_bdl_id(bdl_id: str):
+        return [team for team in list(Team) if team.bdl_id() == bdl_id][0]
+
+    @staticmethod
+    def logo_url(abbreviation: str) -> str:
+        return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{abbreviation}.png&h=25&w=25"

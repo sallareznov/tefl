@@ -66,14 +66,18 @@ class TeamInjuryReport:
 
 def competitors(game: str) -> (Team, Team):
     (away_team_id, home_team_id) = game.split("@")
-    return Team.with_nba_tricode(away_team_id), Team.with_nba_tricode(home_team_id)
+    return Team.with_nba_abbreviation(away_team_id), Team.with_nba_abbreviation(home_team_id)
 
 
-def transform_frame(frame: DataFrame) -> DataFrame:
+def drop_pdf_headers(frame: DataFrame):
     # set first row as header and then drop it from the data
     frame.columns = frame.iloc[0]
     frame = frame.iloc[1:, :]
 
+    return frame
+
+
+def transform_frame(frame: DataFrame) -> DataFrame:
     name_column = frame["Player Name Current Status"].apply(
         lambda x: extract_name_column(x)
     )
@@ -104,7 +108,10 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
     day_after = date + timedelta(days=1)
     tomorrow_str = day_after.strftime("%m/%d/%Y")
     table = tabula.read_pdf(url, stream=True, guess=False, pages="all")
-    frames = [transform_frame(f) for f in table]
+
+    dropped = [drop_pdf_headers(f) for f in table]
+
+    frames = [transform_frame(f) for f in dropped if "Player Name Current Status" in f]
     entire_injury_report = pd.DataFrame(np.concatenate(frames), columns=frames[0].columns)
 
     away_team: Team = None

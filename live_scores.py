@@ -70,6 +70,8 @@ class PlayerLiveGameInfo:
     def minutes_played_html(self):
         return self.minutes_played, " ", Emoji.stopwatch.html()
 
+    def fouls_html(self): return f"{self.personal_fouls} ({self.technical_fouls})"
+
     def ttfl_score_html(self) -> _h:
         return h("span", style="font-weight:bold;")(self.ttfl_score)
 
@@ -175,8 +177,8 @@ def player_live_score(
 
     ttfl_stats = games.game_ttfl_stats(stats)
 
-    team = Team.with_nba_tricode(team_tricode)
-    opponent_team = Team.with_nba_tricode(opponent_tricode)
+    team = Team.with_nba_abbreviation(team_tricode)
+    opponent_team = Team.with_nba_abbreviation(opponent_tricode)
 
     return PlayerLiveGameInfo(
         name=name,

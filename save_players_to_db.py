@@ -1,7 +1,6 @@
 import sqlite3
 
-import players
-from players import Player
+from players import Player2
 
 connection = sqlite3.connect("players.db")
 
@@ -9,32 +8,21 @@ connection = sqlite3.connect("players.db")
 def init_player_table():
     connection.execute(
         """
-            CREATE TABLE IF NOT EXISTS team(
-                id INTEGER PRIMARY KEY,
-                tricode TEXT NOT NULL
-            )
-        """
-    )
-    connection.execute(
-        """
             CREATE TABLE IF NOT EXISTS player(
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
-                team TEXT NOT NULL,
-                FOREIGN KEY(team) REFERENCES team(id)
+                team TEXT NOT NULL
             )
         """
     )
 
 
-def insert_players_into_table(players: list[Player]):
-    team_records = [(player.team_id, player.team_tricode) for player in players]
-    player_records = [(player.id, player.name, player.team_id) for player in players]
-    connection.executemany("INSERT OR IGNORE INTO team(id, tricode) VALUES (?, ?)", team_records)
-    connection.executemany("INSERT INTO player(id, name, team) VALUES (?, ?, ?)", player_records)
+def insert_players_into_table(players: list[Player2]):
+    player_records = [(player.id, player.name, player.team_tricode) for player in players]
+    connection.executemany("INSERT OR IGNORE INTO player(id, name, team) VALUES (?, ?, ?)", player_records)
 
 
-def save_players(players: list[Player]):
+def save_players(players: list[Player2]):
     init_player_table()
     insert_players_into_table(players)
     connection.commit()
@@ -42,5 +30,14 @@ def save_players(players: list[Player]):
 
 
 if __name__ == '__main__':
-    all_players = players.all_players()
-    save_players(all_players)
+    file = open('players.txt', 'r')
+    lines = file.read().splitlines()
+
+    players = []
+
+    for line in lines:
+        player_id, player_name, team = line.split(",")
+        players.append(Player2(player_id, player_name, team))
+
+    save_players(players)
+
