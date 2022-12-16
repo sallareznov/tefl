@@ -3,7 +3,6 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask
-from nba_api.stats import static
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
@@ -12,7 +11,6 @@ import injury_reports
 import live_scores
 from games import Gamelog, GameLocation
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
-from players import Player
 from players_db import get_players_from_db
 from teams import Team
 
@@ -88,6 +86,7 @@ def filter_players_by_name_script() -> raw:
         """
     )
 
+
 @app.route("/gamelog/<player_id>")
 def gamelog_for_player(player_id: str):
     gl = gamelog.compute_bis(player_id)
@@ -96,28 +95,6 @@ def gamelog_for_player(player_id: str):
         h("head")(head),
         h("body")(single_player_gamelog(gl))
     ).render()
-
-
-# @app.route("/gamelog/<search>")
-# def player_ttfl_gamelog(search: str):
-#    assert search.__len__() >= 2
-#    matching_players = players.matching_players(search, all_players)
-#    gamelog_for_player = [(player, gamelog.compute_gamelog(player)) for player in matching_players]
-#
-#    sorted_by_ttfl_average: list[tuple[Player, Gamelog]] = sorted(
-#        gamelog_for_player,
-#        key=lambda t: t[1].ttfl_average,
-#        reverse=True
-#    )
-#
-#    return html()(
-#        h("head")(head),
-#        h("body")(
-#            h("ul")(
-#                h("li")(plaer)
-#            )
-#        )
-#    ).render()
 
 
 @app.route("/live")

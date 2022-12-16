@@ -124,6 +124,8 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
             str(row["Matchup"]), str(row["Team"]), str(row["Player Name"]), \
             str(row["Reason"]), str(row["Current Status"])
 
+        team_nickname = team.split(" ")[-1]
+
         if matchup not in ["nan", "Matchup"]:
             away_team, home_team = competitors(matchup)
 
@@ -131,7 +133,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
         match team:
             case _ if str(row["Game Date"]) == tomorrow_str:
                 break
-            case _ if away_team.full_name() == team:
+            case _ if away_team.nickname().__contains__(team_nickname):
                 match reason:
                     case "NOT YET SUBMITTED":
                         all_reports.append(current_report)
@@ -144,25 +146,17 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                             away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.SUBMITTED
                         )
                         current_report.add_player(player_name, status, reason)
-            case _ if home_team.full_name() == team:
+            case _ if home_team.nickname().__contains__(team_nickname):
                 match reason:
                     case "NOT YET SUBMITTED":
                         all_reports.append(current_report)
-                        current_report = TeamInjuryReport(
-                            team=home_team,
-                            opponent=away_team,
-                            location=GameLocation.HOME,
-                            status=TeamInjuryReportStatus.NOT_YET_SUBMITTED,
-                            injured_players=[]
+                        current_report = init_report(
+                            home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.NOT_YET_SUBMITTED
                         )
                     case _:
                         all_reports.append(current_report)
-                        current_report = TeamInjuryReport(
-                            team=home_team,
-                            opponent=away_team,
-                            location=GameLocation.HOME,
-                            status=TeamInjuryReportStatus.SUBMITTED,
-                            injured_players=[]
+                        current_report = init_report(
+                            home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.SUBMITTED
                         )
                         current_report.add_player(player_name, status, reason)
             case _ if (status not in ["nan", "Current Status"]) and not status.isdigit():
