@@ -1,11 +1,13 @@
 from datetime import datetime
 
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 from bs4 import BeautifulSoup
 from flask import Flask
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
+import caches
 import gamelog
 import injury_reports
 import live_scores
@@ -16,6 +18,12 @@ from players_db import get_players_from_db
 app = Flask(__name__)
 
 all_players = get_players_from_db()
+
+caches = caches.Caches()
+scheduler = BackgroundScheduler()
+scheduler.add_job(caches.clear_latest_injury_report, "cron", minute="0,30")
+scheduler.add_job(caches.clear_gamelog_cache, "cron", hour="8", minute="0")
+scheduler.start()
 
 
 @app.route("/")
@@ -86,7 +94,8 @@ def filter_players_by_name_script() -> raw:
 
 @app.route("/gamelog/<player_id>")
 def gamelog_for_player(player_id: str):
-    gl = gamelog.compute_gamelog(player_id)
+    gl = caches.get_gamelog_of_player(player_id) or gamelog.compute_gamelog(player_id)
+    caches.add_to_gamelog_cache(player_id, gl)
 
     return html()(
         h("head")(head),
@@ -140,7 +149,8 @@ def live_ttfl_scores():
 def injury_report():
     url = latest_injury_report_url()
     today = datetime.now(timezone("US/Eastern"))
-    reports = injury_reports.get_injury_reports(url, today)
+    injury_report = caches.get_latest_injury_report() or injury_reports.get_injury_reports(url, today)
+    caches.set_latest_injury_report(injury_report)
 
     return html()(
         h("head")(head),
@@ -160,7 +170,7 @@ def injury_report():
                         )
                     ),
                     h("tbody", klass="table-group-divider")(
-                        team_injury_report(index, report) for index, report in enumerate(reports)
+                        team_injury_report(index, report) for index, report in enumerate(caches.latest_injury_report)
                     )
                 )
             )
