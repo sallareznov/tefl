@@ -1,21 +1,21 @@
-import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum, auto
+from enum import Enum
 
 import numpy as np
 import pandas as pd
 import tabula
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from tinyhtml import _h, h, raw
 
+import teams
 from games import GameLocation
 from teams import Team
 
 
 class TeamInjuryReportStatus(Enum):
-    SUBMITTED = auto()
-    NOT_YET_SUBMITTED = auto()
+    SUBMITTED = "SUBMITTED"
+    NOT_YET_SUBMITTED = "NOT YET SUBMITTED"
 
 
 class PlayerInjuryStatus(Enum):
@@ -26,8 +26,7 @@ class PlayerInjuryStatus(Enum):
     AVAILABLE = "Available"
 
     @staticmethod
-    def with_status(status: str):
-        return next(s for s in PlayerInjuryStatus if s.value == status)
+    def with_status(status: str): return next(s for s in PlayerInjuryStatus if s.value == status)
 
 
 @dataclass
@@ -66,7 +65,7 @@ class TeamInjuryReport:
 
 def competitors(game: str) -> (Team, Team):
     (away_team_id, home_team_id) = game.split("@")
-    return Team.with_nba_abbreviation(away_team_id), Team.with_nba_abbreviation(home_team_id)
+    return teams.with_nba_abbreviation(away_team_id), teams.with_nba_abbreviation(home_team_id)
 
 
 def drop_pdf_headers(frame: DataFrame):
@@ -78,30 +77,24 @@ def drop_pdf_headers(frame: DataFrame):
 
 
 def transform_frame(frame: DataFrame) -> DataFrame:
-    name_column = frame["Player Name Current Status"].apply(
-        lambda x: extract_name_column(x)
+    frame = frame[frame["Reason"].notnull()]
+
+    frame[["Player Name", "Current Status"]] = frame["Player Name Current Status"].apply(
+        lambda player_name_current_status: Series(split_into_player_name_and_current_status(player_name_current_status))
     )
 
-    status_column = frame["Player Name Current Status"].apply(lambda x: str(x).split(" ")[-1])
-
-    frame = frame.join(status_column.to_frame(name="Current Status"))
-    frame = frame.join(name_column.to_frame(name="Player Name"))
-    frame = frame.drop(["Player Name Current Status"], axis=1)
-
-    frame = frame[["Game Date", "Game Time", "Matchup", "Team", "Player Name", "Current Status", "Reason"]]
-    # frame = frame.loc[str(frame["Current Status"]).isdigit() is True]
+    frame = frame[["Game Date", "Matchup", "Team", "Player Name", "Current Status", "Reason"]]
 
     return frame
 
 
-def extract_name_column(x):
-    match x:
-        case _ if pd.isnull(x) | bool(re.search("Page \d of \d", str(x))):
-            return x
-        case _:
-            last_name, first_name_and_status = str(x).split(",")
-            _, first_name, status = first_name_and_status.split(" ")
-            return f"{first_name} {last_name}"
+def split_into_player_name_and_current_status(player_name_current_status):
+    if pd.isnull(player_name_current_status):
+        return player_name_current_status, player_name_current_status
+    else:
+        last_name, first_name_and_status = str(player_name_current_status).split(",")
+        _, first_name, status = first_name_and_status.split(" ")
+        return f"{first_name} {last_name}", status
 
 
 def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
@@ -119,23 +112,21 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
     current_report: TeamInjuryReport = None
     all_reports: list[TeamInjuryReport] = []
 
-    for index, row in entire_injury_report.iterrows():
+    for _, row in entire_injury_report.iterrows():
         matchup, team, player_name, reason, status = \
             str(row["Matchup"]), str(row["Team"]), str(row["Player Name"]), \
             str(row["Reason"]), str(row["Current Status"])
 
         team_nickname = team.split(" ")[-1]
 
-        if matchup not in ["nan", "Matchup"]:
-            away_team, home_team = competitors(matchup)
+        if matchup != "nan": away_team, home_team = competitors(matchup)
 
-        # TODO improve
         match team:
             case _ if str(row["Game Date"]) == tomorrow_str:
                 break
             case _ if away_team.nickname().__contains__(team_nickname):
                 match reason:
-                    case "NOT YET SUBMITTED":
+                    case TeamInjuryReportStatus.NOT_YET_SUBMITTED.value:
                         all_reports.append(current_report)
                         current_report = init_report(
                             away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.NOT_YET_SUBMITTED
@@ -148,7 +139,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                         current_report.add_player(player_name, status, reason)
             case _ if home_team.nickname().__contains__(team_nickname):
                 match reason:
-                    case "NOT YET SUBMITTED":
+                    case TeamInjuryReportStatus.NOT_YET_SUBMITTED.value:
                         all_reports.append(current_report)
                         current_report = init_report(
                             home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.NOT_YET_SUBMITTED
@@ -159,7 +150,7 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                             home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.SUBMITTED
                         )
                         current_report.add_player(player_name, status, reason)
-            case _ if (status not in ["nan", "Current Status"]) and not status.isdigit():
+            case _ if status != "nan":
                 current_report.add_player(player_name, status, reason)
 
     all_reports.append(current_report)

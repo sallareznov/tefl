@@ -53,9 +53,7 @@ def list_all_players():
                 h("li", klass="list-group-item")(
                     player.team().logo_html(),
                     " ",
-                    h("a", href=f"/gamelog/{player.id}")(
-                        player.name
-                    )
+                    h("a", href=f"/gamelog/{player.id}")(player.name)
                 ) for player in all_players
             ),
             h("script")(filter_players_by_name_script())
@@ -89,7 +87,7 @@ def filter_players_by_name_script() -> raw:
 
 @app.route("/gamelog/<player_id>")
 def gamelog_for_player(player_id: str):
-    gl = gamelog.compute_bis(player_id)
+    gl = gamelog.compute_gamelog(player_id)
 
     return html()(
         h("head")(head),

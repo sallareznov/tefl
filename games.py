@@ -24,6 +24,16 @@ class GameRealStats:
     free_throws_attempted: int
     turnovers: int
 
+    def ttfl_stats(self):
+        bonus = self.points + self.rebounds + self.assists + self.steals + self.blocks \
+                + self.field_goals_made + self.three_pointers_made + self.free_throws_made
+        field_goals_missed = self.field_goals_attempted - self.field_goals_made
+        three_pointers_missed = self.three_pointers_attempted - self.three_pointers_made
+        free_throws_missed = self.free_throws_attempted - self.free_throws_made
+        malus = field_goals_missed + three_pointers_missed + free_throws_missed + self.turnovers
+
+        return GameTTFLStats(bonus=bonus, malus=malus)
+
 
 class GameTTFLStats:
     bonus: int
@@ -98,10 +108,9 @@ class GamelogEntry:
         self.location = location
         self.minutes_played = minutes_played
         self.real_stats = real_stats
-        self.ttfl_stats = game_ttfl_stats(real_stats)
+        self.ttfl_stats = real_stats.ttfl_stats()
 
-    def minutes_played_html(self):
-        return self.minutes_played, " ", Emoji.stopwatch.html()
+    def minutes_played_html(self): return self.minutes_played, " ", Emoji.stopwatch.html()
 
 
 class Gamelog:
@@ -118,14 +127,3 @@ class Gamelog:
         self.games_played = entries.__len__()
         ttfl_scores = [entry.ttfl_stats.score for entry in entries]
         self.ttfl_average = 0 if not ttfl_scores else round(mean(ttfl_scores), 1)
-
-
-def game_ttfl_stats(real_stats: GameRealStats) -> GameTTFLStats:
-    bonus = real_stats.points + real_stats.rebounds + real_stats.assists + real_stats.steals + real_stats.blocks \
-            + real_stats.field_goals_made + real_stats.three_pointers_made + real_stats.free_throws_made
-    field_goals_missed = real_stats.field_goals_attempted - real_stats.field_goals_made
-    three_pointers_missed = real_stats.three_pointers_attempted - real_stats.three_pointers_made
-    free_throws_missed = real_stats.free_throws_attempted - real_stats.free_throws_made
-    malus = field_goals_missed + three_pointers_missed + free_throws_missed + real_stats.turnovers
-
-    return GameTTFLStats(bonus=bonus, malus=malus)

@@ -41,15 +41,16 @@ class Team(Enum):
 
     def nba_abbreviation(self): return self.value[0]
 
-    def team(self): return find_team_by_abbreviation(self.nba_abbreviation())
-
     def espn_abbreviation(self): return self.value[1]
+
+    def team(self): return find_team_by_abbreviation(self.nba_abbreviation())
 
     def bdl_id(self): return self.value[2]
 
-    def logo_html(self) -> h: return h("img", src=self.logo_url(self.espn_abbreviation().lower()))
+    def logo_html(self) -> h: return h("img", src=self.logo_url())
 
-    def city(self) -> str: return self.team()["city"]
+    def logo_url(self) -> str:
+        return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{self.espn_abbreviation().lower()}.png&h=25&w=25"
 
     def nickname(self) -> str: return self.team()["nickname"]
 
@@ -59,14 +60,10 @@ class Team(Enum):
 
     def html_with_full_name(self): return self.logo_html(), " ", self.full_name()
 
-    @staticmethod
-    def with_nba_abbreviation(abbreviation: str):
-        return [team for team in list(Team) if team.nba_abbreviation() == abbreviation][0]
 
-    @staticmethod
-    def with_bdl_id(bdl_id: str):
-        return [team for team in list(Team) if team.bdl_id() == bdl_id][0]
+def with_nba_abbreviation(abbreviation: str) -> Team:
+    return [team for team in list(Team) if team.nba_abbreviation() == abbreviation][0]
 
-    @staticmethod
-    def logo_url(abbreviation: str) -> str:
-        return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{abbreviation}.png&h=25&w=25"
+
+def with_bdl_id(bdl_id: str) -> Team:
+    return [team for team in list(Team) if team.bdl_id() == bdl_id][0]
