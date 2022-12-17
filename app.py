@@ -21,7 +21,7 @@ all_players = get_players_from_db()
 
 caches = caches.Caches()
 scheduler = BackgroundScheduler()
-scheduler.add_job(caches.clear_latest_injury_report, "cron", minute="0,30")
+scheduler.add_job(caches.clear_latest_injury_report, "cron", minute="*/10")
 scheduler.add_job(caches.clear_gamelog_cache, "cron", hour="8", minute="0")
 scheduler.start()
 
