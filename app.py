@@ -9,10 +9,9 @@ from tinyhtml import _h, html, h, raw
 import gamelog
 import injury_reports
 import live_scores
-from games import Gamelog, GameLocation
+from games import Gamelog
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
 from players_db import get_players_from_db
-from teams import Team
 
 app = Flask(__name__)
 
@@ -20,21 +19,21 @@ all_players = get_players_from_db()
 
 
 @app.route("/")
-def home():
+def homepage():
     return html()(
         h("head")(head),
         h("body")(
             h("div", klass="list-group")(
-                list_item("/live", "Scores en live", "Scores TTFL en live de la soirée"),
-                list_item("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée"),
-                list_item("/players", "Stats joueurs", "Stats TTFL de tous les joueurs qui ont joué cette saison")
+                homepage_entry("/live", "Scores en live", "Scores TTFL en live de la soirée"),
+                homepage_entry("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée"),
+                homepage_entry("/players", "Stats joueurs", "Stats TTFL de tous les joueurs qui ont joué cette saison")
             )
         )
     ).render()
 
 
-def list_item(href: str, title: str, description: str) -> _h:
-    return h("a", href=href, klass="list-group-item list-group-item-action flex-column align-items-start")(
+def homepage_entry(route: str, title: str, description: str) -> _h:
+    return h("a", href=route, klass="list-group-item list-group-item-action flex-column align-items-start")(
         h("div", klass="d-flex w-100 justify-content-between")(
             h("h5", klass="mb-1")(title)
         ),
@@ -181,7 +180,7 @@ def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
             return h("tr")(
                 h("th", scope="row")(index + 1),
                 h("td")(report.team.html_with_full_name()),
-                h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
+                h("td", klass="text-center")(report.matchup_html()),
                 report.html_cell_for_injury_status(PlayerInjuryStatus.PROBABLE),
                 report.html_cell_for_injury_status(PlayerInjuryStatus.QUESTIONABLE),
                 report.html_cell_for_injury_status(PlayerInjuryStatus.DOUBTFUL),
@@ -191,15 +190,12 @@ def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
             return h("tr", bgcolor="#C0C0C0")(
                 h("th", scope="row")(index + 1),
                 h("td")(report.team.html_with_full_name()),
-                h("td", klass="text-center")(matchup_html(report.location, report.opponent)),
+                h("td", klass="text-center")(report.matchup_html()),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ")
             )
-
-
-def matchup_html(location: GameLocation, opponent: Team): return location.html_with_text(), " ", opponent.logo_html()
 
 
 def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjuryStatus):

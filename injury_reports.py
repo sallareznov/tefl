@@ -62,6 +62,8 @@ class TeamInjuryReport:
             raw(f"{player.name}<br>") for player in self.players_with_status(status)
         )
 
+    def matchup_html(self): return self.location.html_with_text(), " ", self.opponent.logo_html()
+
 
 def competitors(game: str) -> (Team, Team):
     (away_team_id, home_team_id) = game.split("@")
