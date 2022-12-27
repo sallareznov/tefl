@@ -1,4 +1,5 @@
 from loguru import logger
+from nba_api.stats.endpoints import CumeStatsPlayerGames
 
 from games import Gamelog
 from injury_reports import TeamInjuryReport
@@ -68,5 +69,4 @@ class Caches:
 
 
 #if __name__ == '__main__':
-#    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
 #    print(games)

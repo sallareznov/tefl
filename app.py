@@ -5,6 +5,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from bs4 import BeautifulSoup
 from flask import Flask
 from nba_api.stats import static
+from nba_api.stats.endpoints import CumeStatsPlayerGames
+from nba_api.stats.library.parameters import Season
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
@@ -102,6 +104,12 @@ def filter_players_by_name_script() -> raw:
             }
         """
     )
+
+
+@app.route("/test")
+def test():
+    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
+    return games
 
 
 @app.route("/gamelog/<player_id>")
