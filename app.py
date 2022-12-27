@@ -4,6 +4,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from bs4 import BeautifulSoup
 from flask import Flask
+from nba_api.stats import static
 from pytz import timezone
 from tinyhtml import _h, html, h, raw
 
@@ -11,6 +12,7 @@ import caches
 import gamelog
 import injury_reports
 import live_scores
+import teams
 from games import Gamelog
 from injury_reports import PlayerInjuryStatus, TeamInjuryReport, TeamInjuryReportStatus
 from players_db import get_players_from_db
@@ -23,6 +25,7 @@ caches = caches.Caches()
 scheduler = BackgroundScheduler()
 scheduler.add_job(caches.clear_latest_injury_report, "cron", minute="*/10")
 scheduler.add_job(caches.clear_gamelog_cache, "cron", hour="8", minute="0")
+scheduler.add_job(caches.clear_teams_gamelog_cache, "cron", hour="8", minute="0")
 scheduler.start()
 
 
@@ -40,15 +43,6 @@ def homepage():
     ).render()
 
 
-def homepage_entry(route: str, title: str, description: str) -> _h:
-    return h("a", href=route, klass="list-group-item list-group-item-action flex-column align-items-start")(
-        h("div", klass="d-flex w-100 justify-content-between")(
-            h("h5", klass="mb-1")(title)
-        ),
-        h("p", klass="mb-1")(description)
-    )
-
-
 @app.route("/players")
 def list_all_players():
     return html()(
@@ -64,6 +58,24 @@ def list_all_players():
                 ) for player in all_players
             ),
             h("script")(filter_players_by_name_script())
+        )
+    ).render()
+
+
+@app.route("/teams")
+def list_all_teams():
+    all_teams = sorted(static.teams.get_teams(), key=lambda entry: entry["full_name"])
+
+    return html()(
+        h("head")(head),
+        h("body")(
+            h("ul", klass="list-group")(
+                h("li", klass="list-group-item")(
+                    teams.logo_html(team["abbreviation"]),
+                    " ",
+                    h("a", href=f"/teams/{team['abbreviation']}/gamelog")(team["full_name"])
+                ) for team in all_teams
+            )
         )
     ).render()
 
@@ -123,7 +135,7 @@ def live_ttfl_scores():
                             h("th", scope="col", klass="text-center")("Terrain/Banc?"),
                             h("th", scope="col", klass="text-center")("Fautes (Tech.)"),
                             h("th", scope="col", klass="text-center")("Temps du match"),
-                            h("th", scope="col", klass="text-center")("Score du match"),
+                            h("th", scope="col", klass="text-center")("Score du match")
                         )
                     ),
                     h("tbody", klass="table-group-divider")(
@@ -160,9 +172,8 @@ def injury_report():
                 h("table", klass="table table-responsive table-bordered")(
                     h("thead", klass="table-light")(
                         h("tr")(
-                            h("th", klass="text-center", bgcolor="gray", scope="col")("#"),
-                            h("th", klass="text-center", bgcolor="gray", scope="col")("Équipe"),
-                            h("th", klass="text-center", bgcolor="gray", scope="col")("Adversaire"),
+                            h("th", klass="text-center", style="background-color: gray;", scope="col")("Équipe"),
+                            h("th", klass="text-center", style="background-color: gray;", scope="col")("Adversaire"),
                             injury_status_header("#007500", "PROBABLE", "(80% de chances de jouer)"),
                             injury_status_header("#778A35", "QUESTIONABLE", "(50% de chances de jouer)"),
                             injury_status_header("#A35900", "DOUBTFUL", "(25% de chances de jouer)"),
@@ -170,7 +181,7 @@ def injury_report():
                         )
                     ),
                     h("tbody", klass="table-group-divider")(
-                        team_injury_report(index, report) for index, report in enumerate(caches.latest_injury_report)
+                        team_injury_report(report) for report in caches.latest_injury_report
                     )
                 )
             )
@@ -178,17 +189,64 @@ def injury_report():
     ).render()
 
 
+# @app.route("/players/<player_id>/teams/<team_abbreviation>")
+# def player_vs_team():
+
+@app.route("/teams/<abbreviation>/gamelog")
+def team_gamelog(abbreviation: str):
+    team = teams.with_nba_abbreviation(abbreviation)
+    team_gamelog = caches.get_gamelog_for_team(team) or live_scores.team_gamelogs(team)
+    caches.add_to_teams_gamelog_cache(team, team_gamelog)
+
+    return html()(
+        h("head")(head),
+        h("body")(
+            h("div")(
+                h("h2")(team.html_with_full_name()),
+                h("table", klass="table table-bordered")(
+                    h("thead", klass="table-light")(
+                        h("tr")(
+                            h("th", klass="text-center", scope="col")("Date"),
+                            h("th", klass="text-center", scope="col")("Adversaire"),
+                            h("th", klass="text-center", scope="col")("Lieu"),
+                            h("th", klass="text-center", scope="col")("Meilleurs scores équipe"),
+                            h("th", klass="text-center", scope="col")("Meilleurs scores équipe adverse")
+                        )
+                    ),
+                    h("tbody", klass="table-group-divider")(
+                        h("tr")(
+                            h("td", klass="text-center")(log.date.strftime("%d-%m-%Y")),
+                            h("td", klass="text-center")(log.opponent.html_with_nickname()),
+                            h("td", klass="text-center")(log.location.html_with_emoji()),
+                            h("td")(log.own_team_top_scores.html()),
+                            h("td")(log.opponent_team_top_scores.html())
+                        ) for log in team_gamelog
+                    )
+                )
+            )
+        )
+    ).render()
+
+
+def homepage_entry(route: str, title: str, description: str) -> _h:
+    return h("a", href=route, klass="list-group-item list-group-item-action flex-column align-items-start")(
+        h("div", klass="d-flex w-100 justify-content-between")(
+            h("h5", klass="mb-1")(title)
+        ),
+        h("p", klass="mb-1")(description)
+    )
+
+
 def injury_status_header(bg_color: str, title: str, description: str) -> _h:
-    return h("th", klass="text-center", scope="col", style="color:white;", bgcolor=bg_color)(
+    return h("th", klass="text-center", scope="col", style=f"color:white; background-color:{bg_color}")(
         h("span", style="font-weight:bold;")(title), h("br"), h("span")(description),
     )
 
 
-def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
+def team_injury_report(report: TeamInjuryReport) -> _h:
     match report.status:
         case TeamInjuryReportStatus.SUBMITTED:
             return h("tr")(
-                h("th", scope="row")(index + 1),
                 h("td")(report.team.html_with_full_name()),
                 h("td", klass="text-center")(report.matchup_html()),
                 report.html_cell_for_injury_status(PlayerInjuryStatus.PROBABLE),
@@ -198,7 +256,6 @@ def team_injury_report(index: int, report: TeamInjuryReport) -> _h:
             )
         case TeamInjuryReportStatus.NOT_YET_SUBMITTED:
             return h("tr", bgcolor="#C0C0C0")(
-                h("th", scope="row")(index + 1),
                 h("td")(report.team.html_with_full_name()),
                 h("td", klass="text-center")(report.matchup_html()),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
@@ -251,10 +308,10 @@ def single_player_gamelog(gamelog: Gamelog):
 
 
 head = (
-    h("meta", charset="utf-8"),
+    h("meta", charset="utf-8", name="viewport", content="width=device-width, initial-scale=1"),
     h("link", rel="stylesheet",
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
-      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css",
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD",
       crossorigin="anonymous"
       ),
     h("link", rel="icon", href="https://download.vikidia.org/vikidia/fr/images/7/7a/Basketball.png")

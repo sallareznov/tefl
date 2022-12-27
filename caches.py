@@ -2,15 +2,19 @@ from loguru import logger
 
 from games import Gamelog
 from injury_reports import TeamInjuryReport
+from live_scores import MatchupTTFLStats
+from teams import Team
 
 
 class Caches:
     latest_injury_report: list[TeamInjuryReport]
     gamelog_cache: dict[str, Gamelog]
+    teams_gamelog_cache: dict[Team, list[MatchupTTFLStats]]
 
     def __init__(self):
         self.latest_injury_report = None
         self.gamelog_cache = {}
+        self.teams_gamelog_cache = {}
 
     def get_latest_injury_report(self):
         if self.latest_injury_report:
@@ -29,12 +33,25 @@ class Caches:
             logger.info(f"adding gamelog of player {player_id} to cache")
         self.gamelog_cache[player_id] = gamelog
 
+    def add_to_teams_gamelog_cache(self, team: Team, stats: list[MatchupTTFLStats]):
+        if not self.teams_gamelog_cache.get(team):
+            logger.info(f"adding gamelog of team {team.nickname()} to cache")
+        self.teams_gamelog_cache[team] = stats
+
     def get_gamelog_of_player(self, player_id: str):
         value = self.gamelog_cache.get(player_id)
         if value:
             logger.info(f"getting gamelog of player {player_id} from cache")
         else:
             logger.info(f"no gamelog for {player_id} in cache")
+        return value
+
+    def get_gamelog_for_team(self, team: Team):
+        value = self.teams_gamelog_cache.get(team)
+        if value:
+            logger.info(f"getting gamelog of team {team.nickname()} from cache")
+        else:
+            logger.info(f"no gamelog for team {team.nickname()} in cache")
         return value
 
     def clear_latest_injury_report(self):
@@ -44,3 +61,12 @@ class Caches:
     def clear_gamelog_cache(self):
         logger.info("clearing gamelog in cache")
         self.gamelog_cache.clear()
+
+    def clear_teams_gamelog_cache(self):
+        logger.info("clearing team gamelog in cache")
+        self.teams_gamelog_cache.clear()
+
+
+#if __name__ == '__main__':
+#    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
+#    print(games)

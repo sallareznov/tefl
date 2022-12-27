@@ -1,11 +1,13 @@
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from itertools import chain
 from json import JSONDecodeError
 
 from nba_api.live.nba.endpoints.boxscore import BoxScore
 from nba_api.live.nba.endpoints.scoreboard import ScoreBoard
+from nba_api.stats.endpoints import TeamGameLog
 from tinyhtml import h, _h, raw
 
 import teams
@@ -115,6 +117,77 @@ def scores_for_game(live_game: LiveGame) -> list[PlayerLiveGameInfo]:
         return []
 
 
+@dataclass
+class PlayerTTFLScore:
+    name: str
+    position: str
+    ttfl_score: int
+
+
+def scores_for_game_bis(live_game: LiveGame):
+    try:
+        game = BoxScore(live_game.game_id).get_dict()["game"]
+        home_team = game["homeTeam"]
+        away_team = game["awayTeam"]
+
+        home_team_scores = team_scores_bis(home_team)
+        away_team_scores = team_scores_bis(away_team)
+
+        return home_team_scores + away_team_scores
+    except JSONDecodeError:
+        return []
+
+
+def team_scores_bis(team: dict) -> list[PlayerTTFLScore]:
+    return [player_live_score_bis(player) for player in team["players"]]
+
+
+def player_live_score_bis(player: dict):
+    name = player["nameI"]
+    position = player.get("position", "Bench")
+    ttfl_score = player_ttfl_score(player["statistics"])
+
+    return PlayerTTFLScore(
+        name=name,
+        position=position,
+        ttfl_score=ttfl_score
+    )
+
+
+def player_ttfl_score(statistics: dict):
+    points = statistics["points"]
+    rebounds = statistics["reboundsTotal"]
+    assists = statistics["assists"]
+    steals = statistics["steals"]
+    blocks = statistics["blocks"]
+    field_goals_made = statistics["fieldGoalsMade"]
+    field_goals_attempted = statistics["fieldGoalsAttempted"]
+    three_pointers_made = statistics["threePointersMade"]
+    three_pointers_attempted = statistics["threePointersAttempted"]
+    free_throws_made = statistics["freeThrowsMade"]
+    free_throws_attempted = statistics["freeThrowsAttempted"]
+    turnovers = statistics["turnovers"]
+
+    stats = GameRealStats(
+        points=points,
+        rebounds=rebounds,
+        assists=assists,
+        steals=steals,
+        blocks=blocks,
+        field_goals_made=field_goals_made,
+        field_goals_attempted=field_goals_attempted,
+        three_pointers_made=three_pointers_made,
+        three_pointers_attempted=three_pointers_attempted,
+        free_throws_made=free_throws_made,
+        free_throws_attempted=free_throws_attempted,
+        turnovers=turnovers
+    )
+
+    ttfl_stats = stats.ttfl_stats()
+
+    return ttfl_stats.score
+
+
 def team_scores(
         team: dict,
         team_score: int,
@@ -194,3 +267,85 @@ def player_live_score(
         personal_fouls=personal_fouls,
         technical_fouls=technical_fouls
     )
+
+
+@dataclass
+class TeamTopScores:
+    leader: PlayerTTFLScore
+    second_best: PlayerTTFLScore
+    third_best: PlayerTTFLScore
+
+    def html(self):
+        return h("ul")(
+            h("li")(
+                Emoji.gold_medal.html(),
+                " ",
+                f"{self.leader.name} ({self.leader.position}): {self.leader.ttfl_score}"
+            ),
+            h("li")(
+                Emoji.silver_medal.html(),
+                " ",
+                f"{self.second_best.name} ({self.second_best.position}): {self.second_best.ttfl_score}"
+            ),
+            h("li")(
+                Emoji.bronze_medal.html(),
+                " ",
+                f"{self.third_best.name} ({self.third_best.position}): {self.third_best.ttfl_score}"
+            )
+        )
+
+
+@dataclass
+class MatchupTTFLStats:
+    date: datetime
+    opponent: Team
+    location: GameLocation
+    own_team_top_scores: TeamTopScores
+    opponent_team_top_scores: TeamTopScores
+    own_team_inactive_players: list[str]
+    opponent_team_inactive_players: list[str]
+
+
+def team_matchup_ttfl_stats(game_id: str, team: Team) -> MatchupTTFLStats:
+    boxscore = BoxScore(game_id).get_dict()
+
+    home_team = boxscore["game"]["homeTeam"]
+    away_team = boxscore["game"]["awayTeam"]
+
+    team_dict, opponent_dict, location = (home_team, away_team, GameLocation.HOME) \
+        if home_team["teamTricode"] == team.nba_abbreviation() \
+        else (away_team, home_team, GameLocation.AWAY)
+
+    opponent_team = teams.with_nba_abbreviation(opponent_dict["teamTricode"])
+
+    own_team_scores = team_scores_bis(team_dict)
+    opponent_scores = team_scores_bis(opponent_dict)
+
+    date_str = boxscore["game"]["gameTimeUTC"]
+    date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
+
+    own_team_first, own_team_second, own_team_third, *_ = \
+        sorted(own_team_scores, key=lambda score: score.ttfl_score, reverse=True)
+
+    opponent_first, opponent_second, opponent_third, *_ = \
+        sorted(opponent_scores, key=lambda score: score.ttfl_score, reverse=True)
+
+    return MatchupTTFLStats(
+        date=date,
+        opponent=opponent_team,
+        location=location,
+        own_team_top_scores=TeamTopScores(own_team_first, own_team_second, own_team_third),
+        opponent_team_top_scores=TeamTopScores(opponent_first, opponent_second, opponent_third),
+        own_team_inactive_players=inactive_players(team_dict["players"]),
+        opponent_team_inactive_players=inactive_players(opponent_dict["players"])
+    )
+
+
+def inactive_players(players: dict):
+    return [player["nameI"] for player in players if player["status"] == "INACTIVE"]
+
+
+def team_gamelogs(team: Team):
+    logs = TeamGameLog(team.team()["id"]).get_dict()
+
+    return [team_matchup_ttfl_stats(log[1], team) for log in logs["resultSets"][0]["rowSet"]]

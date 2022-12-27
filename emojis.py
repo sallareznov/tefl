@@ -7,14 +7,17 @@ from tinyhtml import raw
 class Emoji(Enum):
     airplane = 9992
     blush = 128522
+    bronze_medal = 129353
     chair = 129681
     exploding_head = 129327
     expressionless = 128529
     face_vomiting = 129326
     face_with_rolling_eyes = 128580
+    gold_medal = 129351
     heart_eyes = 128525
     house = 127968
     not_permitted = 128683
+    silver_medal = 129352
     smile = 128516
     stadium = 127967
     stopwatch = 9201
