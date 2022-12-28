@@ -198,7 +198,8 @@ def injury_report():
 @app.route("/test")
 def test():
     time.sleep(2)
-    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
+    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739,
+                                 headers={"User-Agent": "PostmanRuntime/7.4.0"}).get_json()
     return games
 
 @app.route("/teams/<abbreviation>/gamelog")
