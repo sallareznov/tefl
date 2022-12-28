@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import requests
@@ -193,6 +194,12 @@ def injury_report():
 
 # @app.route("/players/<player_id>/teams/<team_abbreviation>")
 # def player_vs_team():
+
+@app.route("/test")
+def test():
+    time.sleep(2)
+    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
+    return games
 
 @app.route("/teams/<abbreviation>/gamelog")
 def team_gamelog(abbreviation: str):
