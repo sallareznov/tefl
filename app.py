@@ -106,12 +106,6 @@ def filter_players_by_name_script() -> raw:
     )
 
 
-@app.route("/test")
-def test():
-    games = CumeStatsPlayerGames(202681, season=Season.previous_season, vs_team_id_nullable=1610612739).get_json()
-    return games
-
-
 @app.route("/gamelog/<player_id>")
 def gamelog_for_player(player_id: str):
     gl = caches.get_gamelog_of_player(player_id) or gamelog.compute_gamelog(player_id)
@@ -316,7 +310,7 @@ def single_player_gamelog(gamelog: Gamelog):
 
 
 head = (
-    h("meta", charset="utf-8", name="viewport", content="width=device-width, initial-scale=1"),
+    #h("meta", charset="utf-8", name="viewport", content="width=device-width, initial-scale=1"),
     h("link", rel="stylesheet",
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css",
       integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD",
