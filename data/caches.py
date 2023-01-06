@@ -1,16 +1,15 @@
 from loguru import logger
-from nba_api.stats.endpoints import CumeStatsPlayerGames
 
-from games import Gamelog
-from injury_reports import TeamInjuryReport
-from live_scores import MatchupTTFLStats
-from teams import Team
+from data.player_gamelog import PlayerGamelog
+from functions.injury_reports import TeamInjuryReport
+from functions.live_scores import TeamGame
+from data.team import Team
 
 
 class Caches:
     latest_injury_report: list[TeamInjuryReport]
-    gamelog_cache: dict[str, Gamelog]
-    teams_gamelog_cache: dict[Team, list[MatchupTTFLStats]]
+    gamelog_cache: dict[str, PlayerGamelog]
+    teams_gamelog_cache: dict[Team, list[TeamGame]]
 
     def __init__(self):
         self.latest_injury_report = None
@@ -29,12 +28,12 @@ class Caches:
             logger.info("set latest injury report in cache")
         self.latest_injury_report = injury_report
 
-    def add_to_gamelog_cache(self, player_id: str, gamelog: Gamelog):
+    def add_to_gamelog_cache(self, player_id: str, gamelog: PlayerGamelog):
         if not self.gamelog_cache.get(player_id):
             logger.info(f"adding gamelog of player {player_id} to cache")
         self.gamelog_cache[player_id] = gamelog
 
-    def add_to_teams_gamelog_cache(self, team: Team, stats: list[MatchupTTFLStats]):
+    def add_to_teams_gamelog_cache(self, team: Team, stats: list[TeamGame]):
         if not self.teams_gamelog_cache.get(team):
             logger.info(f"adding gamelog of team {team.nickname()} to cache")
         self.teams_gamelog_cache[team] = stats
@@ -66,7 +65,3 @@ class Caches:
     def clear_teams_gamelog_cache(self):
         logger.info("clearing team gamelog in cache")
         self.teams_gamelog_cache.clear()
-
-
-#if __name__ == '__main__':
-#    print(games)

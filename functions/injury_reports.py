@@ -1,73 +1,19 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
 
 import numpy as np
 import pandas as pd
 import tabula
 from pandas import DataFrame, Series
-from tinyhtml import _h, h, raw
 
-import teams
-from games import GameLocation
-from teams import Team
-
-
-class TeamInjuryReportStatus(Enum):
-    SUBMITTED = "SUBMITTED"
-    NOT_YET_SUBMITTED = "NOT YET SUBMITTED"
-
-
-class PlayerInjuryStatus(Enum):
-    OUT = "Out"
-    DOUBTFUL = "Doubtful"
-    QUESTIONABLE = "Questionable"
-    PROBABLE = "Probable"
-    AVAILABLE = "Available"
-
-    @staticmethod
-    def with_status(status: str): return next(s for s in PlayerInjuryStatus if s.value == status)
-
-
-@dataclass
-class InjuredPlayer:
-    name: str
-    status: PlayerInjuryStatus
-    reason: str
-    # premium: bool
-
-
-@dataclass
-class TeamInjuryReport:
-    team: Team
-    opponent: Team
-    location: GameLocation
-    status: TeamInjuryReportStatus
-    injured_players: list[InjuredPlayer]
-
-    def add_player(self, name: str, status: str, reason: str):
-        self.injured_players.append(
-            InjuredPlayer(
-                name=name,
-                status=PlayerInjuryStatus.with_status(status),
-                reason=reason
-            )
-        )
-
-    def players_with_status(self, status: PlayerInjuryStatus):
-        return [player for player in self.injured_players if player.status == status]
-
-    def html_cell_for_injury_status(self, status: PlayerInjuryStatus) -> _h:
-        return h("td", klass="text-center")(
-            raw(f"{player.name}<br>") for player in self.players_with_status(status)
-        )
-
-    def matchup_html(self): return self.location.html_with_text(), " ", self.opponent.logo_html()
+from data.game_location import GameLocation
+from data.team import Team, team_with_nba_abbreviation
+from data.team_injury_report import TeamInjuryReport
+from data.team_injury_report_status import TeamInjuryReportStatus
 
 
 def competitors(game: str) -> (Team, Team):
     (away_team_id, home_team_id) = game.split("@")
-    return teams.with_nba_abbreviation(away_team_id), teams.with_nba_abbreviation(home_team_id)
+    return team_with_nba_abbreviation(away_team_id), team_with_nba_abbreviation(home_team_id)
 
 
 def drop_pdf_headers(frame: DataFrame):
@@ -130,12 +76,12 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                 match reason:
                     case TeamInjuryReportStatus.NOT_YET_SUBMITTED.value:
                         all_reports.append(current_report)
-                        current_report = init_report(
+                        current_report = TeamInjuryReport(
                             away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.NOT_YET_SUBMITTED
                         )
                     case _:
                         all_reports.append(current_report)
-                        current_report = init_report(
+                        current_report = TeamInjuryReport(
                             away_team, home_team, GameLocation.AWAY, TeamInjuryReportStatus.SUBMITTED
                         )
                         current_report.add_player(player_name, status, reason)
@@ -143,12 +89,12 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
                 match reason:
                     case TeamInjuryReportStatus.NOT_YET_SUBMITTED.value:
                         all_reports.append(current_report)
-                        current_report = init_report(
+                        current_report = TeamInjuryReport(
                             home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.NOT_YET_SUBMITTED
                         )
                     case _:
                         all_reports.append(current_report)
-                        current_report = init_report(
+                        current_report = TeamInjuryReport(
                             home_team, away_team, GameLocation.HOME, TeamInjuryReportStatus.SUBMITTED
                         )
                         current_report.add_player(player_name, status, reason)
@@ -158,18 +104,3 @@ def get_injury_reports(url: str, date: datetime) -> list[TeamInjuryReport]:
     all_reports.append(current_report)
 
     return [report for report in all_reports if report is not None]
-
-
-def init_report(
-        team: Team,
-        opponent: Team,
-        location: GameLocation,
-        status: TeamInjuryReportStatus
-) -> TeamInjuryReport:
-    return TeamInjuryReport(
-        team=team,
-        opponent=opponent,
-        location=location,
-        status=status,
-        injured_players=[]
-    )

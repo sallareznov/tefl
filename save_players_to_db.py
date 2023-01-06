@@ -2,7 +2,7 @@ import sqlite3
 
 from players import Player
 
-connection = sqlite3.connect("players.db")
+connection = sqlite3.connect("database/players.db")
 
 
 def init_player_table():

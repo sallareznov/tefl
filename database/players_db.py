@@ -1,8 +1,8 @@
 import sqlite3
 
-from players import Player
+from data.player import Player
 
-connection = sqlite3.connect("players.db", check_same_thread=False)
+connection = sqlite3.connect("database/players.db", check_same_thread=False)
 
 
 def get_players_from_db() -> list[Player]:
