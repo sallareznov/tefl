@@ -1,5 +1,8 @@
+import time
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
+from nba_api.stats.endpoints import PlayerGameLog
 
 from data.caches import Caches
 from database.players_db import get_players_from_db
@@ -35,3 +38,9 @@ def live_ttfl_scores(): return live_scores_html.live_ttfl_scores()
 
 @app.route("/injuries")
 def injury_report(): return injury_report_html.injury_report(caches)
+
+
+@app.route("/test")
+def test():
+    time.sleep(1)
+    return PlayerGameLog(player_id=203937).get_json()
