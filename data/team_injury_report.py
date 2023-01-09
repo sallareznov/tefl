@@ -15,17 +15,17 @@ class TeamInjuryReport:
     opponent: Team
     location: GameLocation
     status: TeamInjuryReportStatus
-    injured_players: list[InjuredPlayer]
+    players: list[InjuredPlayer]
 
     def __init__(self, team: Team, opponent: Team, location: GameLocation, status: TeamInjuryReportStatus):
         self.team = team
         self.opponent = opponent
         self.location = location
         self.status = status
-        self.injured_players = []
+        self.players = []
 
     def add_player(self, name: str, status: str, reason: str):
-        self.injured_players.append(
+        self.players.append(
             InjuredPlayer(
                 name=name,
                 status=PlayerInjuryStatus.with_status(status),
@@ -34,7 +34,7 @@ class TeamInjuryReport:
         )
 
     def players_with_status(self, status: PlayerInjuryStatus):
-        return [player for player in self.injured_players if player.status == status]
+        return [player for player in self.players if player.status == status]
 
     def html_cell_for_injury_status(self, status: PlayerInjuryStatus) -> _h:
         return h("td", klass="text-center")(

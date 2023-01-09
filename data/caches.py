@@ -1,8 +1,8 @@
 from loguru import logger
 
 from data.player_gamelog import PlayerGamelog
+from data.team_game import TeamGame
 from functions.injury_reports import TeamInjuryReport
-from functions.live_scores import TeamGame
 from data.team import Team
 
 

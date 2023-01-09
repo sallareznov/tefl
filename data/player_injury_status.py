@@ -11,9 +11,4 @@ class PlayerInjuryStatus(Enum):
 
     @staticmethod
     def with_status(status: str):
-        print(f"status = {status}")
-        l = [s for s in PlayerInjuryStatus if s.value == status]
-        if l:
-            return l[0]
-        else:
-            return PlayerInjuryStatus.UNKNOWN
+        return next(iter([s for s in PlayerInjuryStatus if s.value == status]), PlayerInjuryStatus.UNKNOWN)

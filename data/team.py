@@ -65,8 +65,7 @@ def team_with_nba_abbreviation(abbreviation: str) -> Team:
     return [team for team in list(Team) if team.nba_abbreviation() == abbreviation][0]
 
 
-def team_with_bdl_id(bdl_id: str) -> Team:
-    return [team for team in list(Team) if team.bdl_id() == bdl_id][0]
+def team_with_bdl_id(bdl_id: str) -> Team: return [team for team in list(Team) if team.bdl_id() == bdl_id][0]
 
 
 def team_logo_html(abbreviation: str) -> h: return team_with_nba_abbreviation(abbreviation).logo_html()

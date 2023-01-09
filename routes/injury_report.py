@@ -15,8 +15,8 @@ from functions.common import head
 def injury_report(caches: Caches):
     url = latest_injury_report_url()
     today = datetime.now(timezone("US/Eastern"))
-    injury_report = caches.get_latest_injury_report() or injury_reports.get_injury_reports(url, today)
-    caches.set_latest_injury_report(injury_report)
+    latest_injury_report = caches.get_latest_injury_report() or injury_reports.get_injury_reports(url, today)
+    caches.set_latest_injury_report(latest_injury_report)
 
     return html()(
         h("head")(head),
@@ -52,9 +52,7 @@ def html_cell_for_injury_status(report: TeamInjuryReport, status: PlayerInjurySt
 def latest_injury_report_url() -> str:
     response = requests.get("https://official.nba.com/nba-injury-report-2022-23-season/")
     soup = BeautifulSoup(response.text, "html.parser")
-    injury_reports = soup.select("div[class~=post-injury] a")
-
-    return [report.get("href") for report in injury_reports][-1]
+    return soup.select("div[class~=post-injury] a")[-1].get("href")
 
 
 def injury_status_header(bg_color: str, title: str, description: str) -> _h:
@@ -83,3 +81,10 @@ def team_injury_report(report: injury_reports.TeamInjuryReport) -> _h:
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ")
             )
+
+
+if __name__ == '__main__':
+    response = requests.get("https://www.statmuse.com/nba/player/shai-gilgeous-alexander-9773")
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    print(soup.select_one("img[data-cy-illustration]").get("src"))

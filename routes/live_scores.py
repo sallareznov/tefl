@@ -19,7 +19,7 @@ def live_ttfl_scores():
                             h("th", scope="col")("Joueur"),
                             h("th", scope="col", klass="text-center")("Score TTFL"),
                             h("th", scope="col")("Adversaire"),
-                            h("th", scope="col", klass="text-center")("Minutes jouées"),
+                            h("th", scope="col", klass="text-center")("Minutes"),
                             h("th", scope="col", klass="text-center")("Terrain/Banc?"),
                             h("th", scope="col", klass="text-center")("Fautes (Tech.)"),
                             h("th", scope="col", klass="text-center")("Temps du match"),

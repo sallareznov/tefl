@@ -1,12 +1,10 @@
 from tinyhtml import html, h, raw
 
+from data.player import Player
 from functions.common import head
-from database.players_db import get_players_from_db
-
-all_players = get_players_from_db()
 
 
-def list_all_players():
+def all(all_players: list[Player]):
     return html()(
         h("head")(head),
         h("body")(
@@ -16,7 +14,7 @@ def list_all_players():
                 h("li", klass="list-group-item")(
                     player.team().logo_html(),
                     " ",
-                    h("a", href=f"/gamelog/{player.id}")(player.name)
+                    h("a", href=f"/players/{player.id}/gamelog")(player.name)
                 ) for player in all_players
             ),
             h("script")(filter_players_by_name_script())

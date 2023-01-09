@@ -2,16 +2,16 @@ from datetime import datetime
 
 import requests
 
-from database import players_db
 from data.game_location import GameLocation
 from data.game_stats import GameStats
 from data.player_game import PlayerGame
 from data.player_gamelog import PlayerGamelog
 from data.team import team_with_bdl_id
+from database.player_repository import PlayerRepository
 
 
-def player_gamelog(player_id: str) -> PlayerGamelog:
-    player = players_db.get_player_by_id(player_id)
+def player_gamelog(player_id: str, repository: PlayerRepository) -> PlayerGamelog:
+    player = repository.get_player_by_id(player_id)
     stats_url = "https://balldontlie.io/api/v1/stats"
     response = requests.get(stats_url, params={"seasons[]": "2022", "player_ids[]": player_id}).json()
 
@@ -23,8 +23,9 @@ def player_gamelog(player_id: str) -> PlayerGamelog:
     for page in range(next_page, total_pages + 1):
         response = requests.get(
             stats_url,
-            params={"page": page, "seasons[]": "2022", "player_ids[]": {player_id}}
+            params={"page": page, "seasons[]": "2022", "player_ids[]": player_id}
         ).json()
+
         entries.extend([gamelog_entry(game) for game in response["data"] if int(game["min"]) != 0])
 
     return PlayerGamelog(
@@ -47,7 +48,8 @@ def gamelog_entry(game: dict) -> PlayerGame:
 
     opponent = team_with_bdl_id(opponent_bdl_id)
 
-    real_stats = GameStats(
+    stats = GameStats(
+        minutes=int(game["min"]),
         points=game["pts"],
         rebounds=game["reb"],
         assists=game["ast"],
@@ -67,5 +69,5 @@ def gamelog_entry(game: dict) -> PlayerGame:
         opponent=opponent,
         location=location,
         minutes_played=minutes_played,
-        real_stats=real_stats
+        stats=stats
     )

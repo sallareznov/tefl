@@ -1,16 +1,17 @@
-import time
+import sqlite3
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
-from nba_api.stats.endpoints import PlayerGameLog
 
 from data.caches import Caches
-from database.players_db import get_players_from_db
-from routes import injury_report_html, player_gamelog, live_scores_html, home, players_list
+from database.player_repository import PlayerRepository
+from routes import player_gamelog, home, players, live_scores, injury_report
 
 app = Flask(__name__)
 
-all_players = get_players_from_db()
+connection = sqlite3.connect("database/players.db", check_same_thread=False)
+player_repository = PlayerRepository(connection)
+all_players = player_repository.get_players_from_db()
 
 caches = Caches()
 scheduler = BackgroundScheduler()
@@ -25,22 +26,16 @@ def homepage(): return home.homepage()
 
 
 @app.route("/players")
-def list_all_players(): return players_list.list_all_players()
+def list_all_players(): return players.all(all_players)
 
 
-@app.route("/gamelog/<player_id>")
-def gamelog_for_player(player_id: str): return player_gamelog.gamelog_for_player(player_id, caches)
+@app.route("/players/<player_id>/gamelog")
+def gamelog_for_player(player_id: str): return player_gamelog.gamelog_for_player(player_id, player_repository, caches)
 
 
 @app.route("/live")
-def live_ttfl_scores(): return live_scores_html.live_ttfl_scores()
+def live_ttfl_scores(): return live_scores.live_ttfl_scores()
 
 
 @app.route("/injuries")
-def injury_report(): return injury_report_html.injury_report(caches)
-
-
-@app.route("/test")
-def test():
-    time.sleep(1)
-    return PlayerGameLog(player_id=203937).get_json()
+def latest_injury_report(): return injury_report.injury_report(caches)

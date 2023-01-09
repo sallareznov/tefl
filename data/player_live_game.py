@@ -9,7 +9,7 @@ from emojis import Emoji
 
 
 @dataclass
-class PlayerLiveGameInfo:
+class PlayerLiveGame:
     name: str
     team: Team
     ttfl_score: int
