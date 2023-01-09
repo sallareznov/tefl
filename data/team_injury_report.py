@@ -41,4 +41,4 @@ class TeamInjuryReport:
             raw(f"{player.name}<br>") for player in self.players_with_status(status)
         )
 
-    def matchup_html(self): return self.location.html_with_label(), " ", self.opponent.logo_html()
+    def matchup_html(self): return self.location.html_with_label(), " ", self.opponent.logo2525_html()

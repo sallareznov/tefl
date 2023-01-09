@@ -81,10 +81,3 @@ def team_injury_report(report: injury_reports.TeamInjuryReport) -> _h:
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ"),
                 h("td", klass="text-center")("PAS ENCORE PUBLIÉ")
             )
-
-
-if __name__ == '__main__':
-    response = requests.get("https://www.statmuse.com/nba/player/shai-gilgeous-alexander-9773")
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    print(soup.select_one("img[data-cy-illustration]").get("src"))

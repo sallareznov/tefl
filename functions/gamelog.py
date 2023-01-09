@@ -4,16 +4,15 @@ import requests
 
 from data.game_location import GameLocation
 from data.game_stats import GameStats
+from data.player import Player
 from data.player_game import PlayerGame
 from data.player_gamelog import PlayerGamelog
 from data.team import team_with_bdl_id
-from database.player_repository import PlayerRepository
 
 
-def player_gamelog(player_id: str, repository: PlayerRepository) -> PlayerGamelog:
-    player = repository.get_player_by_id(player_id)
+def player_gamelog(player: Player) -> PlayerGamelog:
     stats_url = "https://balldontlie.io/api/v1/stats"
-    response = requests.get(stats_url, params={"seasons[]": "2022", "player_ids[]": player_id}).json()
+    response = requests.get(stats_url, params={"seasons[]": "2022", "player_ids[]": player.id}).json()
 
     entries = [gamelog_entry(game) for game in response["data"] if int(game["min"]) != 0]
 
@@ -23,7 +22,7 @@ def player_gamelog(player_id: str, repository: PlayerRepository) -> PlayerGamelo
     for page in range(next_page, total_pages + 1):
         response = requests.get(
             stats_url,
-            params={"page": page, "seasons[]": "2022", "player_ids[]": player_id}
+            params={"page": page, "seasons[]": "2022", "player_ids[]": player.id}
         ).json()
 
         entries.extend([gamelog_entry(game) for game in response["data"] if int(game["min"]) != 0])

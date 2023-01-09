@@ -8,7 +8,9 @@ class Emoji(Enum):
     airplane = 9992
     blush = 128522
     bronze_medal = 129353
+    calendar = 128197
     chair = 129681
+    chart_with_upwards_trend = 128200
     exploding_head = 129327
     expressionless = 128529
     face_vomiting = 129326
@@ -17,6 +19,8 @@ class Emoji(Enum):
     heart_eyes = 128525
     house = 127968
     not_permitted = 128683
+    position = 128205
+    punch = 128074
     silver_medal = 129352
     smile = 128516
     stadium = 127967

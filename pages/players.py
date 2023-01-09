@@ -12,7 +12,7 @@ def all(all_players: list[Player]):
               title="Type in a name"),
             h("ul", id="myUL", klass="list-group")(
                 h("li", klass="list-group-item")(
-                    player.team().logo_html(),
+                    player.team().logo2525_html(),
                     " ",
                     h("a", href=f"/players/{player.id}/gamelog")(player.name)
                 ) for player in all_players

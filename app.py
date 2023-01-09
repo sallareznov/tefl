@@ -5,7 +5,7 @@ from flask import Flask
 
 from data.caches import Caches
 from database.player_repository import PlayerRepository
-from routes import player_gamelog, home, players, live_scores, injury_report
+from pages import player_gamelog, home, players, live_scores, injury_report
 
 app = Flask(__name__)
 

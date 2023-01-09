@@ -8,6 +8,7 @@ class Player:
     id: int
     name: str
     team_abbreviation: str
+    illustration: str
 
     def __hash__(self) -> int: return hash(self.name)
 

@@ -27,5 +27,3 @@ class PlayerGame:
         self.location = location
         self.minutes_played = minutes_played
         self.ttfl_stats = GameTTFLStats(stats)
-
-    def minutes_played_html(self): return self.minutes_played, " ", Emoji.stopwatch.html()
