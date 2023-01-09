@@ -37,7 +37,7 @@ def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Cac
                     ),
                     h("img", klass="col-sm-3 align-self-center mt-2", src=player.illustration)
                 ),
-                h("div", klass="row m-4")(
+                h("div", klass="row")(
                     h("table", klass="table table-sm table-responsive table-bordered")(
                         h("thead", klass="table-light")(
                             h("tr")(
