@@ -9,7 +9,7 @@ from data.caches import Caches
 from data.player_injury_status import PlayerInjuryStatus
 from data.team_injury_report import TeamInjuryReport
 from functions import injury_reports
-from functions.common import head
+from pages import common
 
 
 def injury_report(caches: Caches):
@@ -19,7 +19,7 @@ def injury_report(caches: Caches):
     caches.set_latest_injury_report(latest_injury_report)
 
     return html()(
-        h("head")(head),
+        h("head")(common.head),
         h("body")(
             h("div")(
                 h("h2")("Injury Report"),
@@ -38,7 +38,8 @@ def injury_report(caches: Caches):
                         team_injury_report(report) for report in caches.latest_injury_report
                     )
                 )
-            )
+            ),
+            common.bootstrap_js_script
         )
     ).render()
 

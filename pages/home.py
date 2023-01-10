@@ -1,17 +1,18 @@
 from tinyhtml import html, h, _h
 
-from functions.common import head
+from pages import common
 
 
 def homepage():
     return html()(
-        h("head")(head),
+        h("head")(common.head),
         h("body")(
             h("div", klass="list-group")(
                 homepage_entry("/live", "Scores en live", "Scores TTFL en live de la soirée"),
                 homepage_entry("/injuries", "Injury report", "Injury report le plus récent des matchs de la soirée"),
                 homepage_entry("/players", "Stats joueurs", "Stats TTFL de tous les joueurs qui ont joué cette saison")
-            )
+            ),
+            common.bootstrap_js_script
         )
     ).render()
 

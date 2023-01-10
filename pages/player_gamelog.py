@@ -4,7 +4,7 @@ from data.caches import Caches
 from database.player_repository import PlayerRepository
 from emojis import Emoji
 from functions import player_gamelog
-from functions.common import head
+from pages import common
 
 
 def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Caches):
@@ -15,7 +15,7 @@ def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Cac
 
     return html()(
         h("head")(
-            head,
+            common.head,
             h("style")(
                 f"""
                     th, nav {{
@@ -49,13 +49,13 @@ def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Cac
             ),
             h("div", klass="container-fluid")(
                 h("div", klass="row", style=f"background-color: {team.primary_color()}")(
-                    h("div", klass="col-sm-9 align-self-center",
+                    h("div", klass="col-sm-10 align-self-center",
                       style=f"text-align:center; color:{team.secondary_color()};")(
                         h("h1", klass="fw-bolder text-5xl")(gl.player),
                         h("h3", klass="fw-light")(team.logo3535_html(), " ", team.full_name()),
                         h("h3")(f"Moyenne TTFL: {gl.ttfl_average}")
                     ),
-                    h("img", klass="col-sm-3 align-self-center mt-2", src=player.illustration)
+                    h("img", klass="col-sm-2 align-self-center mt-2", src=player.illustration)
                 ),
                 h("div", klass="row")(
                     h("table", klass="table table-sm table-responsive table-bordered")(
@@ -82,7 +82,8 @@ def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Cac
                         )
                     )
                 )
-            )
+            ),
+            common.bootstrap_js_script
         )
     ).render()
 

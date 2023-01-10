@@ -1,14 +1,14 @@
 from tinyhtml import html, h, raw
 
 from functions import live_scores
-from functions.common import head
+from pages import common
 
 
 def live_ttfl_scores():
     all_scores = live_scores.live_ttfl_scores()
 
     return html()(
-        h("head")(head),
+        h("head")(common.head),
         h("body")(
             h("div", klass="container-fluid")(
                 h("div")(
@@ -65,7 +65,8 @@ def live_ttfl_scores():
                     )
                 )
             ),
-            h("script")(filter_players_by_name_script())
+            h("script")(filter_players_by_name_script()),
+            common.bootstrap_js_script
         )
     ).render()
 

@@ -1,12 +1,12 @@
 from tinyhtml import html, h, raw
 
 from data.player import Player
-from functions.common import head
+from pages import common
 
 
 def all(all_players: list[Player]):
     return html()(
-        h("head")(head),
+        h("head")(common.head),
         h("body")(
             h("input", klass="form-control mr-sm-2", type="text", id="myInput", onkeyup="filterPlayersByName()", placeholder="Nom du joueur...",
               title="Type in a name"),
@@ -17,7 +17,8 @@ def all(all_players: list[Player]):
                     h("a", href=f"/players/{player.id}/gamelog")(player.name)
                 ) for player in all_players
             ),
-            h("script")(filter_players_by_name_script())
+            h("script")(filter_players_by_name_script()),
+            common.bootstrap_js_script
         )
     ).render()
 
