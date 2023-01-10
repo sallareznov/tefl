@@ -8,7 +8,7 @@ def all(all_players: list[Player]):
     return html()(
         h("head")(head),
         h("body")(
-            h("input", type="text", id="myInput", onkeyup="filterPlayersByName()", placeholder="Nom du joueur...",
+            h("input", klass="form-control mr-sm-2", type="text", id="myInput", onkeyup="filterPlayersByName()", placeholder="Nom du joueur...",
               title="Type in a name"),
             h("ul", id="myUL", klass="list-group")(
                 h("li", klass="list-group-item")(

@@ -16,7 +16,7 @@ def player_gamelog(player: Player) -> PlayerGamelog:
 
     entries = [gamelog_entry(game) for game in response["data"] if int(game["min"]) != 0]
 
-    next_page = response["meta"]["next_page"]
+    next_page = response["meta"]["next_page"] or 2
     total_pages = response["meta"]["total_pages"]
 
     for page in range(next_page, total_pages + 1):
