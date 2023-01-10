@@ -118,7 +118,8 @@ def player_live_score(
         location: GameLocation,
         game_status: str
 ) -> PlayerLiveGame:
-    name = player["nameI"]
+    nameI = player["nameI"]
+    full_name = player["name"]
     player_status = PlayerStatus.of_player(player)
 
     statistics = player["statistics"]
@@ -160,7 +161,8 @@ def player_live_score(
     opponent_team = team_with_nba_abbreviation(opponent_tricode)
 
     return PlayerLiveGame(
-        name=name,
+        nameI=nameI,
+        full_name=full_name,
         team=team,
         team_score=team_score,
         opponent_team=opponent_team,

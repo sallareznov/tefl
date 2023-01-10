@@ -10,7 +10,8 @@ from emojis import Emoji
 
 @dataclass
 class PlayerLiveGame:
-    name: str
+    nameI: str
+    full_name: str
     team: Team
     ttfl_score: int
     minutes_played: int
@@ -24,7 +25,7 @@ class PlayerLiveGame:
     game_status: str
 
     def name_html(self):
-        return self.team.logo2525_html(), " ", self.name
+        return h("span", title=self.full_name)(self.team.logo2525_html(), " ", self.nameI)
 
     def opponent_team_html(self):
         return self.location.emoji().html(), " ", self.opponent_team.nickname()

@@ -30,6 +30,7 @@ def gamelog_for_player(player_id: str, repository: PlayerRepository, caches: Cac
             )
         ),
         h("body")(
+            # TODO container-fluid
             h("nav", klass="navbar navbar-expand-lg")(
                 h("button", klass="navbar-toggler", type="button", data_toggle="collapse",
                   data_target="#navbarNavAltMarkup", aria_controls="navbarNavAltMarkup", aria_expanded="false",
